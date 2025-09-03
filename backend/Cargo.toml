@@ -16,9 +16,12 @@ r2d2 = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
 scraper = "0.18"
 uuid = { version = "1.0", features = ["v4", "serde"] }
+regex = "1.0"
 anyhow = "1.0"
 thiserror = "1.0"
 log = "0.4"
 env_logger = "0.10"
 
 [dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.0"

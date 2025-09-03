@@ -1,4 +1,4 @@
-use rocket::serde::json::Json;
+use rocket::{get, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]

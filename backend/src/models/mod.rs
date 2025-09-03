@@ -1,1 +1,9 @@
-// Models will be implemented in subsequent tasks
+pub mod newsletter_subscription;
+pub mod repository;
+pub mod summary;
+pub mod trending_history;
+
+pub use newsletter_subscription::*;
+pub use repository::*;
+pub use summary::*;
+pub use trending_history::*;
