@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+dist
+target
+*.lock
+*.log
+.env*
+coverage
+.nyc_output
