@@ -11,26 +11,27 @@ A web application that helps developers discover and track trending GitHub repos
 - Node.js (18+)
 - PostgreSQL (15+)
 
-### Quick Start with Docker
+### Quick Start
 
 1. Clone the repository
-2. Copy environment variables:
+2. Run the development setup script:
    ```bash
-   cp .env.example .env
+   ./scripts/dev-setup.sh
    ```
-3. Start all services:
+3. Start the backend:
    ```bash
-   docker-compose up -d
+   cd backend && cargo run
    ```
-4. Run database migrations:
+4. Start the frontend (in another terminal):
    ```bash
-   docker-compose exec backend diesel migration run
+   cd frontend && npm run dev
    ```
 
 The application will be available at:
+
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
-- PostgreSQL: localhost:5432
+- PostgreSQL: localhost:5434
 - Redis: localhost:6379
 
 ### Local Development
