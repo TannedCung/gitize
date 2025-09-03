@@ -1,0 +1,13 @@
+# Build directories
+.next/
+node_modules/
+dist/
+build/
+
+# Lock files
+package-lock.json
+yarn.lock
+
+# Generated files
+*.min.js
+*.min.css

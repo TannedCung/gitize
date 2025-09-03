@@ -18,17 +18,17 @@ repos:
     hooks:
       - id: eslint
         name: eslint
-        entry: npx eslint
+        entry: sh -c 'cd frontend && npm run lint'
         language: system
-        files: \.(js|jsx|ts|tsx)$
-        args: [--fix]
+        files: ^frontend/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
 
       - id: prettier
         name: prettier
-        entry: npx prettier
+        entry: sh -c 'cd frontend && npx prettier --write .'
         language: system
-        files: \.(js|jsx|ts|tsx|json|css|md|yaml|yml)$
-        args: [--write]
+        files: ^frontend/.*\.(js|jsx|ts|tsx|json|css|md)$
+        pass_filenames: false
 
   # Rust formatting and linting
   - repo: local
