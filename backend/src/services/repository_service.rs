@@ -52,7 +52,7 @@ impl RepositoryService {
         Ok(repositories)
     }
 
-    /// Search repositories by query
+    /// Search repositories by query with relevance ranking
     pub async fn search_repositories(
         &self,
         query: &str,
@@ -61,6 +61,27 @@ impl RepositoryService {
     ) -> Result<Vec<Repository>, RepositoryServiceError> {
         let mut conn = self.db_pool.get()?;
         let repositories = RepositoryRepository::search(&mut conn, query, limit, offset)?;
+        Ok(repositories)
+    }
+
+    /// Advanced search with additional filters
+    pub async fn advanced_search_repositories(
+        &self,
+        query: &str,
+        language_filter: Option<String>,
+        min_stars: Option<i32>,
+        limit: Option<i64>,
+        offset: Option<i64>,
+    ) -> Result<Vec<Repository>, RepositoryServiceError> {
+        let mut conn = self.db_pool.get()?;
+        let repositories = RepositoryRepository::advanced_search(
+            &mut conn,
+            query,
+            language_filter,
+            min_stars,
+            limit,
+            offset,
+        )?;
         Ok(repositories)
     }
 

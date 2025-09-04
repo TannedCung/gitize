@@ -1,5 +1,6 @@
 pub mod github_scraper;
 pub mod llm_client;
+pub mod newsletter_service;
 pub mod repository_service;
 pub mod summary_service;
 

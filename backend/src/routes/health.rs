@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct HealthResponse {
-    status: String,
-    timestamp: String,
+    pub status: String,
+    pub timestamp: String,
 }
 
 #[get("/health")]

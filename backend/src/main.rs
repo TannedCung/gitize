@@ -1,23 +1,9 @@
-#[macro_use]
-extern crate rocket;
+use rocket::launch;
 
-mod database;
-mod models;
-mod repositories;
-mod routes;
-mod schema;
-mod seed;
-mod services;
-
-use dotenv::dotenv;
-use rocket::{Build, Rocket};
+use github_trending_summarizer::rocket as build_rocket;
 
 #[launch]
-fn rocket() -> Rocket<Build> {
-    dotenv().ok();
+fn rocket() -> rocket::Rocket<rocket::Build> {
     env_logger::init();
-
-    rocket::build()
-        .attach(database::stage())
-        .mount("/api", routes![routes::health::health_check,])
+    build_rocket()
 }
