@@ -1,6 +1,13 @@
 use crate::database::DbPool;
-use crate::models::{NewNewsletterSubscription, NewsletterSubscription};
+use crate::models::{
+    NewNewsletterSubscription, NewsletterSubscription, Repository, RepositoryFilters,
+};
 use crate::repositories::newsletter_repo::NewsletterRepository;
+use crate::services::email_client::{EmailClient, EmailError};
+use crate::services::newsletter_template::{NewsletterTemplate, TemplateError};
+use crate::services::repository_service::{RepositoryService, RepositoryServiceError};
+use chrono::{Datelike, Duration, Utc};
+use std::env;
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -10,6 +17,14 @@ pub enum NewsletterServiceError {
     DatabaseError(#[from] diesel::result::Error),
     #[error("Connection pool error: {0}")]
     PoolError(#[from] r2d2::Error),
+    #[error("Repository service error: {0}")]
+    RepositoryServiceError(#[from] RepositoryServiceError),
+    #[error("Email service error: {0}")]
+    EmailError(#[from] EmailError),
+    #[error("Template error: {0}")]
+    TemplateError(#[from] TemplateError),
+    #[error("Configuration error: {0}")]
+    ConfigError(String),
     #[error("Validation error: {0}")]
     ValidationError(String),
     #[error("Email already subscribed")]
@@ -22,11 +37,32 @@ pub enum NewsletterServiceError {
 
 pub struct NewsletterService {
     db_pool: Arc<DbPool>,
+    repository_service: Arc<RepositoryService>,
+    email_client: EmailClient,
+    template: NewsletterTemplate,
+    base_url: String,
 }
 
 impl NewsletterService {
-    pub fn new(db_pool: Arc<DbPool>) -> Self {
-        Self { db_pool }
+    pub fn new(
+        db_pool: Arc<DbPool>,
+        repository_service: Arc<RepositoryService>,
+    ) -> Result<Self, NewsletterServiceError> {
+        let email_client = EmailClient::new().map_err(|e| {
+            NewsletterServiceError::ConfigError(format!("Email client setup failed: {}", e))
+        })?;
+
+        let template = NewsletterTemplate::new().map_err(NewsletterServiceError::TemplateError)?;
+
+        let base_url = env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+
+        Ok(Self {
+            db_pool,
+            repository_service,
+            email_client,
+            template,
+            base_url,
+        })
     }
 
     /// Subscribe a new email to the newsletter
@@ -126,6 +162,193 @@ impl NewsletterService {
         })
     }
 
+    /// Generate and send weekly newsletter to all active subscribers
+    pub async fn send_weekly_newsletter(
+        &self,
+    ) -> Result<NewsletterSendResult, NewsletterServiceError> {
+        log::info!("Starting weekly newsletter generation and sending");
+
+        // Get top 5 trending repositories from the past week
+        let top_repos = self.get_top_weekly_repositories(5).await?;
+
+        if top_repos.is_empty() {
+            log::warn!("No trending repositories found for this week");
+            return Ok(NewsletterSendResult::new());
+        }
+
+        // Get all active subscriptions
+        let subscriptions = self.get_active_subscriptions(None, None).await?;
+
+        if subscriptions.is_empty() {
+            log::info!("No active subscriptions found");
+            return Ok(NewsletterSendResult::new());
+        }
+
+        // Generate newsletter content
+        let (week_start, week_end) = self.get_current_week_dates();
+        let subject = format!("🚀 GitHub Trending Weekly - {} to {}", week_start, week_end);
+
+        // Prepare recipients with unsubscribe URLs
+        let recipients: Vec<(String, String)> = subscriptions
+            .iter()
+            .map(|sub| {
+                let unsubscribe_url = format!(
+                    "{}/newsletter/unsubscribe/{}",
+                    self.base_url, sub.unsubscribe_token
+                );
+                (sub.email.clone(), unsubscribe_url)
+            })
+            .collect();
+
+        // Generate newsletter templates
+        let html_content = self.template.render_html_newsletter(
+            &top_repos,
+            "", // Will be replaced per recipient
+            &week_start,
+            &week_end,
+        )?;
+
+        let text_content = self.template.render_text_newsletter(
+            &top_repos,
+            "", // Will be replaced per recipient
+            &week_start,
+            &week_end,
+        )?;
+
+        // Send newsletters
+        let mut result = NewsletterSendResult::new();
+
+        for (email, unsubscribe_url) in recipients {
+            // Customize content with recipient-specific unsubscribe URL
+            let personalized_html = html_content.replace("{{unsubscribe_url}}", &unsubscribe_url);
+            let personalized_text = text_content.replace("{{unsubscribe_url}}", &unsubscribe_url);
+
+            match self
+                .email_client
+                .send_newsletter(
+                    &email,
+                    &subject,
+                    &personalized_html,
+                    &personalized_text,
+                    &unsubscribe_url,
+                )
+                .await
+            {
+                Ok(_) => {
+                    result.successful_sends.push(email);
+                }
+                Err(e) => {
+                    log::warn!("Failed to send newsletter to {}: {}", email, e);
+                    result.failed_sends.push((email, e.to_string()));
+                }
+            }
+
+            // Add delay to avoid rate limiting
+            tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+        }
+
+        log::info!(
+            "Weekly newsletter sending completed: {} successful, {} failed",
+            result.successful_sends.len(),
+            result.failed_sends.len()
+        );
+
+        Ok(result)
+    }
+
+    /// Get top trending repositories from the past week
+    async fn get_top_weekly_repositories(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<Repository>, NewsletterServiceError> {
+        let end_date = Utc::now().date_naive();
+        let start_date = end_date - Duration::days(7);
+
+        // Get repositories from the past week, sorted by stars
+        let filters = RepositoryFilters {
+            language: None,
+            min_stars: Some(10), // Only include repos with at least 10 stars
+            max_stars: None,
+            date_from: Some(start_date),
+            date_to: Some(end_date),
+            limit: Some(limit as i64),
+            offset: None,
+        };
+
+        let mut repositories = self
+            .repository_service
+            .get_trending_repositories(filters)
+            .await?;
+
+        // Sort by stars descending and take top N
+        repositories.sort_by(|a, b| b.stars.cmp(&a.stars));
+        repositories.truncate(limit);
+
+        Ok(repositories)
+    }
+
+    /// Get current week date range for newsletter
+    fn get_current_week_dates(&self) -> (String, String) {
+        let today = Utc::now().date_naive();
+        let days_since_monday = today.weekday().num_days_from_monday();
+
+        let week_start = today - Duration::days(days_since_monday as i64);
+        let week_end = week_start + Duration::days(6);
+
+        let week_start_str = week_start.format("%b %d, %Y").to_string();
+        let week_end_str = week_end.format("%b %d, %Y").to_string();
+
+        (week_start_str, week_end_str)
+    }
+
+    /// Send newsletter to a specific email (for testing)
+    pub async fn send_test_newsletter(&self, email: &str) -> Result<(), NewsletterServiceError> {
+        // Validate email
+        Self::validate_email(email)?;
+
+        // Get top 5 repositories
+        let top_repos = self.get_top_weekly_repositories(5).await?;
+
+        if top_repos.is_empty() {
+            return Err(NewsletterServiceError::ValidationError(
+                "No trending repositories available for newsletter".to_string(),
+            ));
+        }
+
+        // Generate content
+        let (week_start, week_end) = self.get_current_week_dates();
+        let subject = "🚀 Test Newsletter - GitHub Trending Weekly".to_string();
+        let unsubscribe_url = format!("{}/newsletter/unsubscribe/test", self.base_url);
+
+        let html_content = self.template.render_html_newsletter(
+            &top_repos,
+            &unsubscribe_url,
+            &week_start,
+            &week_end,
+        )?;
+
+        let text_content = self.template.render_text_newsletter(
+            &top_repos,
+            &unsubscribe_url,
+            &week_start,
+            &week_end,
+        )?;
+
+        // Send email
+        self.email_client
+            .send_newsletter(
+                email,
+                &subject,
+                &html_content,
+                &text_content,
+                &unsubscribe_url,
+            )
+            .await?;
+
+        log::info!("Test newsletter sent successfully to: {}", email);
+        Ok(())
+    }
+
     /// Validate email format
     pub fn validate_email(email: &str) -> Result<(), NewsletterServiceError> {
         let email_regex = regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -146,6 +369,42 @@ pub struct NewsletterStatistics {
     pub total_subscriptions: i64,
     pub active_subscriptions: i64,
     pub inactive_subscriptions: i64,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct NewsletterSendResult {
+    pub successful_sends: Vec<String>,
+    pub failed_sends: Vec<(String, String)>, // (email, error_message)
+    pub total_repositories: usize,
+}
+
+impl Default for NewsletterSendResult {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl NewsletterSendResult {
+    pub fn new() -> Self {
+        Self {
+            successful_sends: Vec::new(),
+            failed_sends: Vec::new(),
+            total_repositories: 0,
+        }
+    }
+
+    pub fn total_attempted(&self) -> usize {
+        self.successful_sends.len() + self.failed_sends.len()
+    }
+
+    pub fn success_rate(&self) -> f64 {
+        let total = self.total_attempted();
+        if total == 0 {
+            0.0
+        } else {
+            self.successful_sends.len() as f64 / total as f64
+        }
+    }
 }
 
 #[cfg(test)]

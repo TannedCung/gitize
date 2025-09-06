@@ -1,7 +1,8 @@
 use crate::database::DbPool;
 use crate::services::newsletter_service::{
-    NewsletterService, NewsletterServiceError, NewsletterStatistics,
+    NewsletterSendResult, NewsletterService, NewsletterServiceError, NewsletterStatistics,
 };
+use crate::services::repository_service::RepositoryService;
 use rocket::serde::json::Json;
 use rocket::{get, post, routes, Route, State};
 use serde::{Deserialize, Serialize};
@@ -9,6 +10,11 @@ use std::sync::Arc;
 
 #[derive(Deserialize)]
 pub struct SubscribeRequest {
+    email: String,
+}
+
+#[derive(Deserialize)]
+pub struct TestNewsletterRequest {
     email: String,
 }
 
@@ -42,6 +48,10 @@ impl From<NewsletterServiceError> for ErrorResponse {
         let code = match error {
             NewsletterServiceError::DatabaseError(_) => "DATABASE_ERROR",
             NewsletterServiceError::PoolError(_) => "CONNECTION_ERROR",
+            NewsletterServiceError::RepositoryServiceError(_) => "REPOSITORY_ERROR",
+            NewsletterServiceError::EmailError(_) => "EMAIL_ERROR",
+            NewsletterServiceError::TemplateError(_) => "TEMPLATE_ERROR",
+            NewsletterServiceError::ConfigError(_) => "CONFIG_ERROR",
             NewsletterServiceError::ValidationError(_) => "VALIDATION_ERROR",
             NewsletterServiceError::AlreadySubscribed => "ALREADY_SUBSCRIBED",
             NewsletterServiceError::NotFound => "NOT_FOUND",
@@ -60,7 +70,14 @@ pub async fn subscribe(
     db_pool: &State<Arc<DbPool>>,
     request: Json<SubscribeRequest>,
 ) -> Result<Json<SubscribeResponse>, Json<ErrorResponse>> {
-    let service = NewsletterService::new(db_pool.inner().clone());
+    // Create repository service first
+    let repository_service = Arc::new(RepositoryService::new(db_pool.inner().clone()));
+
+    // Create newsletter service with repository service
+    let service = match NewsletterService::new(db_pool.inner().clone(), repository_service) {
+        Ok(service) => service,
+        Err(e) => return Err(Json(e.into())),
+    };
 
     // Validate email format
     if let Err(e) = NewsletterService::validate_email(&request.email) {
@@ -86,7 +103,14 @@ pub async fn unsubscribe(
     db_pool: &State<Arc<DbPool>>,
     token: String,
 ) -> Result<Json<UnsubscribeResponse>, Json<ErrorResponse>> {
-    let service = NewsletterService::new(db_pool.inner().clone());
+    // Create repository service first
+    let repository_service = Arc::new(RepositoryService::new(db_pool.inner().clone()));
+
+    // Create newsletter service with repository service
+    let service = match NewsletterService::new(db_pool.inner().clone(), repository_service) {
+        Ok(service) => service,
+        Err(e) => return Err(Json(e.into())),
+    };
 
     match service.unsubscribe(token).await {
         Ok(subscription) => Ok(Json(UnsubscribeResponse {
@@ -102,7 +126,14 @@ pub async fn get_subscription_status(
     db_pool: &State<Arc<DbPool>>,
     email: String,
 ) -> Result<Json<StatusResponse>, Json<ErrorResponse>> {
-    let service = NewsletterService::new(db_pool.inner().clone());
+    // Create repository service first
+    let repository_service = Arc::new(RepositoryService::new(db_pool.inner().clone()));
+
+    // Create newsletter service with repository service
+    let service = match NewsletterService::new(db_pool.inner().clone(), repository_service) {
+        Ok(service) => service,
+        Err(e) => return Err(Json(e.into())),
+    };
 
     // Validate email format
     if let Err(e) = NewsletterService::validate_email(&email) {
@@ -119,11 +150,76 @@ pub async fn get_subscription_status(
 pub async fn get_newsletter_statistics(
     db_pool: &State<Arc<DbPool>>,
 ) -> Result<Json<NewsletterStatistics>, Json<ErrorResponse>> {
-    let service = NewsletterService::new(db_pool.inner().clone());
+    // Create repository service first
+    let repository_service = Arc::new(RepositoryService::new(db_pool.inner().clone()));
+
+    // Create newsletter service with repository service
+    let service = match NewsletterService::new(db_pool.inner().clone(), repository_service) {
+        Ok(service) => service,
+        Err(e) => return Err(Json(e.into())),
+    };
 
     match service.get_statistics().await {
         Ok(stats) => Ok(Json(stats)),
         Err(e) => Err(Json(e.into())),
+    }
+}
+
+#[post("/newsletter/send")]
+pub async fn send_weekly_newsletter(
+    db_pool: &State<Arc<DbPool>>,
+) -> Result<Json<NewsletterSendResult>, Json<ErrorResponse>> {
+    // Create repository service first
+    let repository_service = Arc::new(RepositoryService::new(db_pool.inner().clone()));
+
+    // Create newsletter service with repository service
+    let service = match NewsletterService::new(db_pool.inner().clone(), repository_service) {
+        Ok(service) => service,
+        Err(e) => return Err(Json(e.into())),
+    };
+
+    match service.send_weekly_newsletter().await {
+        Ok(result) => {
+            log::info!(
+                "Weekly newsletter sent: {} successful, {} failed",
+                result.successful_sends.len(),
+                result.failed_sends.len()
+            );
+            Ok(Json(result))
+        }
+        Err(e) => {
+            log::error!("Failed to send weekly newsletter: {}", e);
+            Err(Json(e.into()))
+        }
+    }
+}
+
+#[post("/newsletter/test", data = "<request>")]
+pub async fn send_test_newsletter(
+    db_pool: &State<Arc<DbPool>>,
+    request: Json<TestNewsletterRequest>,
+) -> Result<Json<serde_json::Value>, Json<ErrorResponse>> {
+    // Create repository service first
+    let repository_service = Arc::new(RepositoryService::new(db_pool.inner().clone()));
+
+    // Create newsletter service with repository service
+    let service = match NewsletterService::new(db_pool.inner().clone(), repository_service) {
+        Ok(service) => service,
+        Err(e) => return Err(Json(e.into())),
+    };
+
+    match service.send_test_newsletter(&request.email).await {
+        Ok(_) => {
+            log::info!("Test newsletter sent successfully to: {}", request.email);
+            Ok(Json(serde_json::json!({
+                "message": "Test newsletter sent successfully",
+                "email": request.email
+            })))
+        }
+        Err(e) => {
+            log::error!("Failed to send test newsletter to {}: {}", request.email, e);
+            Err(Json(e.into()))
+        }
     }
 }
 
@@ -132,7 +228,9 @@ pub fn routes() -> Vec<Route> {
         subscribe,
         unsubscribe,
         get_subscription_status,
-        get_newsletter_statistics
+        get_newsletter_statistics,
+        send_weekly_newsletter,
+        send_test_newsletter
     ]
 }
 

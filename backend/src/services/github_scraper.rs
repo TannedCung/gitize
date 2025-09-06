@@ -134,8 +134,9 @@ impl GitHubScraper {
         let mut repositories = Vec::new();
         let today = Utc::now().date_naive();
 
+        // Process elements synchronously to avoid Send trait issues
         for repo_element in document.select(&repo_selector) {
-            match self.extract_repository_data(&repo_element, today).await {
+            match self.extract_repository_data_sync(&repo_element, today) {
                 Ok(repo) => repositories.push(repo),
                 Err(e) => {
                     log::warn!("Failed to extract repository data: {}", e);
@@ -151,6 +152,97 @@ impl GitHubScraper {
         }
 
         Ok(repositories)
+    }
+
+    fn extract_repository_data_sync(
+        &self,
+        element: &scraper::ElementRef<'_>,
+        trending_date: chrono::NaiveDate,
+    ) -> Result<NewRepository, ScraperError> {
+        // Extract repository name and author
+        let name_selector = Selector::parse("h2.h3 a").map_err(|e| {
+            ScraperError::ParseError(format!("Failed to create name selector: {:?}", e))
+        })?;
+
+        let name_element = element.select(&name_selector).next().ok_or_else(|| {
+            ScraperError::ExtractionError("Repository name not found".to_string())
+        })?;
+
+        let href = name_element.value().attr("href").ok_or_else(|| {
+            ScraperError::ExtractionError("Repository href not found".to_string())
+        })?;
+
+        let full_name = href.trim_start_matches('/').to_string();
+        let parts: Vec<&str> = full_name.split('/').collect();
+        if parts.len() != 2 {
+            return Err(ScraperError::ExtractionError(format!(
+                "Invalid repository path: {}",
+                full_name
+            )));
+        }
+
+        let author = parts[0].to_string();
+        let name = parts[1].to_string();
+        let url = format!("https://github.com{}", href);
+
+        // Extract description
+        let desc_selector = Selector::parse("p.col-9").map_err(|e| {
+            ScraperError::ParseError(format!("Failed to create description selector: {:?}", e))
+        })?;
+
+        let description = element
+            .select(&desc_selector)
+            .next()
+            .map(|el| el.text().collect::<Vec<_>>().join(" ").trim().to_string())
+            .filter(|s| !s.is_empty());
+
+        // Extract language
+        let lang_selector =
+            Selector::parse("span[itemprop='programmingLanguage']").map_err(|e| {
+                ScraperError::ParseError(format!("Failed to create language selector: {:?}", e))
+            })?;
+
+        let language = element
+            .select(&lang_selector)
+            .next()
+            .map(|el| el.text().collect::<Vec<_>>().join("").trim().to_string())
+            .filter(|s| !s.is_empty());
+
+        // Extract stars and forks
+        let stats_selector = Selector::parse("div.f6 a").map_err(|e| {
+            ScraperError::ParseError(format!("Failed to create stats selector: {:?}", e))
+        })?;
+
+        let stats: Vec<String> = element
+            .select(&stats_selector)
+            .map(|el| el.text().collect::<Vec<_>>().join("").trim().to_string())
+            .collect();
+
+        let (stars, forks) = self.parse_stats(&stats)?;
+
+        // Generate a mock GitHub ID based on the repository path
+        // In a real implementation, you might want to fetch this from GitHub API
+        let github_id = self.generate_github_id(&full_name);
+
+        let new_repo = NewRepository {
+            github_id,
+            name,
+            full_name,
+            description,
+            stars,
+            forks,
+            language,
+            author,
+            url,
+            trending_date,
+        };
+
+        // Validate the repository data
+        new_repo.validate().map_err(|e| {
+            ScraperError::ExtractionError(format!("Repository validation failed: {}", e))
+        })?;
+
+        Ok(new_repo)
     }
 
     async fn extract_repository_data(

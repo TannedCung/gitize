@@ -3,8 +3,10 @@ use rocket::routes;
 use rocket::local::blocking::Client;
 use std::sync::Once;
 
+#[allow(dead_code)]
 static INIT: Once = Once::new();
 
+#[allow(dead_code)]
 pub fn setup_test_client() -> Client {
     INIT.call_once(|| {
         dotenv::dotenv().ok();
@@ -21,6 +23,7 @@ pub fn setup_test_client() -> Client {
     Client::tracked(rocket).expect("valid rocket instance")
 }
 
+#[allow(dead_code)]
 pub fn setup_full_test_client() -> Client {
     INIT.call_once(|| {
         dotenv::dotenv().ok();
