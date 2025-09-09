@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scrollbar Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar styles from our implementation */
+      .scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(156 163 175) transparent;
+      }
+
+      .scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      .scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 0.5rem;
+      }
+
+      .scrollbar::-webkit-scrollbar-thumb {
+        background: rgb(156 163 175);
+        border-radius: 0.5rem;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        transition: background-color 0.2s ease-in-out;
+      }
+
+      .scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgb(107 114 128);
+      }
+
+      .scrollbar::-webkit-scrollbar-thumb:active {
+        background: rgb(75 85 99);
+      }
+
+      .scrollbar::-webkit-scrollbar-corner {
+        background: transparent;
+      }
+
+      /* Dark mode scrollbar styles */
+      .dark .scrollbar {
+        scrollbar-color: rgb(75 85 99) transparent;
+      }
+
+      .dark .scrollbar::-webkit-scrollbar-thumb {
+        background: rgb(75 85 99);
+      }
+
+      .dark .scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgb(107 114 128);
+      }
+
+      .dark .scrollbar::-webkit-scrollbar-thumb:active {
+        background: rgb(156 163 175);
+      }
+
+      /* Brand scrollbar */
+      .scrollbar-brand::-webkit-scrollbar-thumb {
+        background: #00b5ff;
+        opacity: 0.6;
+      }
+
+      .scrollbar-brand::-webkit-scrollbar-thumb:hover {
+        background: #00b5ff;
+        opacity: 0.8;
+      }
+
+      .scrollbar-brand::-webkit-scrollbar-thumb:active {
+        background: #00b5ff;
+        opacity: 1;
+      }
+
+      .dark .scrollbar-brand::-webkit-scrollbar-thumb {
+        background: #00c8ff;
+        opacity: 0.6;
+      }
+
+      .dark .scrollbar-brand::-webkit-scrollbar-thumb:hover {
+        background: #00c8ff;
+        opacity: 0.8;
+      }
+
+      .dark .scrollbar-brand::-webkit-scrollbar-thumb:active {
+        background: #00c8ff;
+        opacity: 1;
+      }
+
+      /* Smooth scrolling */
+      .scroll-smooth {
+        scroll-behavior: smooth;
+      }
+
+      /* Touch scrolling for mobile */
+      .scroll-touch {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+
+      /* Thin scrollbar variant */
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      /* Thick scrollbar variant */
+      .scrollbar-thick::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+      }
+
+      /* Hidden scrollbar */
+      .scrollbar-none {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .scrollbar-none::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-8">
+        Scrollbar Implementation Test
+      </h1>
+
+      <div class="flex justify-end mb-4">
+        <button
+          id="themeToggle"
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Toggle Dark Mode
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Default Scrollbar -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-3">Default Scrollbar</h2>
+          <div
+            class="scrollbar overflow-auto h-48 border border-gray-200 rounded p-3"
+          >
+            <div class="space-y-2">
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 1
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 2
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 3
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 4
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 5
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 6
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 7
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 8
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 9
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 10
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 11
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 12
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 13
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 14
+              </div>
+              <div class="h-8 bg-blue-100 rounded flex items-center px-3">
+                Item 15
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brand Scrollbar -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-3">Brand Scrollbar</h2>
+          <div
+            class="scrollbar scrollbar-brand overflow-auto h-48 border border-gray-200 rounded p-3"
+          >
+            <div class="space-y-2">
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 1
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 2
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 3
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 4
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 5
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 6
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 7
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 8
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 9
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 10
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 11
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 12
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 13
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 14
+              </div>
+              <div class="h-8 bg-green-100 rounded flex items-center px-3">
+                Brand Item 15
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thin Scrollbar -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-3">Thin Scrollbar</h2>
+          <div
+            class="scrollbar scrollbar-thin overflow-auto h-48 border border-gray-200 rounded p-3"
+          >
+            <div class="space-y-2">
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 1
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 2
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 3
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 4
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 5
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 6
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 7
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 8
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 9
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 10
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 11
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 12
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 13
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 14
+              </div>
+              <div class="h-8 bg-purple-100 rounded flex items-center px-3">
+                Thin Item 15
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horizontal Scrolling -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h2 class="text-lg font-semibold mb-3">Horizontal Scrolling</h2>
+          <div
+            class="scrollbar overflow-auto h-32 border border-gray-200 rounded p-3"
+          >
+            <div class="flex space-x-4" style="width: 800px">
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 1
+              </div>
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 2
+              </div>
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 3
+              </div>
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 4
+              </div>
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 5
+              </div>
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 6
+              </div>
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 7
+              </div>
+              <div
+                class="flex-shrink-0 w-24 h-16 bg-red-100 rounded flex items-center justify-center"
+              >
+                Card 8
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold mb-3">Smooth Scrolling Test</h2>
+        <div
+          class="scrollbar scroll-smooth overflow-auto h-64 border border-gray-200 rounded p-3"
+        >
+          <div class="space-y-4">
+            <div
+              id="section1"
+              class="h-32 bg-gradient-to-r from-blue-100 to-blue-200 rounded flex items-center justify-center text-lg font-semibold"
+            >
+              Section 1
+            </div>
+            <div
+              id="section2"
+              class="h-32 bg-gradient-to-r from-green-100 to-green-200 rounded flex items-center justify-center text-lg font-semibold"
+            >
+              Section 2
+            </div>
+            <div
+              id="section3"
+              class="h-32 bg-gradient-to-r from-purple-100 to-purple-200 rounded flex items-center justify-center text-lg font-semibold"
+            >
+              Section 3
+            </div>
+            <div
+              id="section4"
+              class="h-32 bg-gradient-to-r from-red-100 to-red-200 rounded flex items-center justify-center text-lg font-semibold"
+            >
+              Section 4
+            </div>
+            <div
+              id="section5"
+              class="h-32 bg-gradient-to-r from-yellow-100 to-yellow-200 rounded flex items-center justify-center text-lg font-semibold"
+            >
+              Section 5
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 space-x-2">
+          <button
+            onclick="document.getElementById('section1').scrollIntoView({behavior: 'smooth'})"
+            class="px-3 py-1 bg-blue-500 text-white rounded text-sm"
+          >
+            Go to Section 1
+          </button>
+          <button
+            onclick="document.getElementById('section3').scrollIntoView({behavior: 'smooth'})"
+            class="px-3 py-1 bg-green-500 text-white rounded text-sm"
+          >
+            Go to Section 3
+          </button>
+          <button
+            onclick="document.getElementById('section5').scrollIntoView({behavior: 'smooth'})"
+            class="px-3 py-1 bg-purple-500 text-white rounded text-sm"
+          >
+            Go to Section 5
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const themeToggle = document.getElementById('themeToggle');
+      const body = document.body;
+
+      themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark');
+        if (body.classList.contains('dark')) {
+          body.classList.remove('bg-gray-100');
+          body.classList.add('bg-gray-900', 'text-white');
+          themeToggle.textContent = 'Toggle Light Mode';
+        } else {
+          body.classList.remove('bg-gray-900', 'text-white');
+          body.classList.add('bg-gray-100');
+          themeToggle.textContent = 'Toggle Dark Mode';
+        }
+      });
+    </script>
+  </body>
+</html>
