@@ -60,49 +60,69 @@ const LoadingSpinner: React.FC<{ size: 'sm' | 'md' | 'lg' }> = ({ size }) => {
 };
 
 /**
- * Get variant-specific classes for the button
+ * Get variant-specific classes for the button - Flat, borderless design
  */
 const getVariantClasses = (variant: ComponentVariant): string => {
   const variants = {
     primary: cn(
-      'bg-primary-500 text-white border-primary-500',
-      'hover:bg-primary-600 hover:border-primary-600',
-      'active:bg-primary-700 active:border-primary-700',
-      'dark:bg-primary-600 dark:border-primary-600',
-      'dark:hover:bg-primary-700 dark:hover:border-primary-700',
-      'dark:active:bg-primary-800 dark:active:border-primary-800'
+      // Flat default state - no borders, minimal visual weight
+      'bg-accent-blue-500 text-neutral-white border-none',
+      // Subtle hover state - light background change only
+      'hover:bg-accent-blue-600',
+      // Minimal active state
+      'active:bg-accent-blue-700',
+      // Dark mode flat styling
+      'dark:bg-accent-blue-600',
+      'dark:hover:bg-accent-blue-700',
+      'dark:active:bg-accent-blue-800'
     ),
     secondary: cn(
-      'bg-gray-100 text-gray-900 border-gray-200',
-      'hover:bg-gray-200 hover:border-gray-300',
-      'active:bg-gray-300 active:border-gray-400',
-      'dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600',
-      'dark:hover:bg-gray-600 dark:hover:border-gray-500',
-      'dark:active:bg-gray-500 dark:active:border-gray-400'
+      // Flat default state - no borders or visual weight
+      'bg-neutral-100 text-neutral-900 border-none',
+      // Subtle hover state - light gray background only
+      'hover:bg-neutral-200',
+      // Minimal active state
+      'active:bg-neutral-300',
+      // Dark mode flat styling
+      'dark:bg-neutral-700 dark:text-neutral-100',
+      'dark:hover:bg-neutral-600',
+      'dark:active:bg-neutral-500'
     ),
     outline: cn(
-      'bg-transparent text-gray-700 border-gray-300',
-      'hover:bg-gray-50 hover:border-gray-400',
-      'active:bg-gray-100 active:border-gray-500',
-      'dark:text-gray-300 dark:border-gray-600',
-      'dark:hover:bg-gray-800 dark:hover:border-gray-500',
-      'dark:active:bg-gray-700 dark:active:border-gray-400'
+      // Flat transparent default - borderless
+      'bg-transparent text-neutral-700 border-none',
+      // Subtle hover state - light background appears
+      'hover:bg-neutral-50',
+      // Minimal active state
+      'active:bg-neutral-100',
+      // Dark mode flat styling
+      'dark:text-neutral-300',
+      'dark:hover:bg-neutral-800',
+      'dark:active:bg-neutral-700'
     ),
     ghost: cn(
-      'bg-transparent text-gray-700 border-transparent',
-      'hover:bg-gray-100 hover:text-gray-900',
-      'active:bg-gray-200',
-      'dark:text-gray-300',
-      'dark:hover:bg-gray-800 dark:hover:text-gray-100',
-      'dark:active:bg-gray-700'
+      // Completely flat and borderless - typography weight only
+      'bg-transparent text-neutral-700 border-none',
+      // Subtle hover state - minimal background
+      'hover:bg-neutral-100 hover:text-neutral-900',
+      // Minimal active state
+      'active:bg-neutral-200',
+      // Dark mode flat styling
+      'dark:text-neutral-300',
+      'dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
+      'dark:active:bg-neutral-700'
     ),
     danger: cn(
-      'bg-error-500 text-white border-error-500',
-      'hover:bg-error-600 hover:border-error-600',
-      'active:bg-error-700 active:border-error-700',
-      'dark:bg-error-600 dark:border-error-600',
-      'dark:hover:bg-error-700 dark:hover:border-error-700',
-      'dark:active:bg-error-800 dark:active:border-error-800'
+      // Flat error state - no borders
+      'bg-accent-red-500 text-neutral-white border-none',
+      // Subtle hover state
+      'hover:bg-accent-red-600',
+      // Minimal active state
+      'active:bg-accent-red-700',
+      // Dark mode flat styling
+      'dark:bg-accent-red-600',
+      'dark:hover:bg-accent-red-700',
+      'dark:active:bg-accent-red-800'
     ),
   };
 
@@ -110,33 +130,38 @@ const getVariantClasses = (variant: ComponentVariant): string => {
 };
 
 /**
- * Get size-specific classes for the button
+ * Get size-specific classes for the button - Typography weight instead of heavy styling
  */
 const getSizeClasses = (size: 'sm' | 'md' | 'lg'): string => {
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm font-medium',
+    // Small: minimal padding, lighter font weight
+    sm: 'px-3 py-1.5 text-sm font-normal',
+    // Medium: balanced padding, medium font weight
     md: 'px-4 py-2 text-sm font-medium',
-    lg: 'px-6 py-3 text-base font-medium',
+    // Large: generous padding, stronger font weight for hierarchy
+    lg: 'px-6 py-3 text-base font-semibold',
   };
 
   return sizes[size];
 };
 
 /**
- * Get focus ring classes based on variant
+ * Get minimal focus ring classes for accessibility compliance - Flat design
  */
 const getFocusRingClasses = (variant: ComponentVariant): string => {
   const focusRings = {
-    primary: 'focus:ring-primary-500',
-    secondary: 'focus:ring-gray-500',
-    outline: 'focus:ring-gray-500',
-    ghost: 'focus:ring-gray-500',
-    danger: 'focus:ring-error-500',
+    primary: 'focus:ring-accent-blue-500',
+    secondary: 'focus:ring-neutral-500',
+    outline: 'focus:ring-neutral-500',
+    ghost: 'focus:ring-neutral-500',
+    danger: 'focus:ring-accent-red-500',
   };
 
   return cn(
-    'focus:outline-none focus:ring-2 focus:ring-offset-2',
-    'dark:focus:ring-offset-gray-900',
+    // Minimal focus states for accessibility - no heavy styling
+    'focus:outline-none focus:ring-1 focus:ring-offset-1',
+    // Subtle focus ring offset for flat design
+    'dark:focus:ring-offset-neutral-900',
     focusRings[variant]
   );
 };
@@ -194,10 +219,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const baseClasses = cn(
-      // Base styles
+      // Base styles - flat, borderless design
       'inline-flex items-center justify-center',
-      'border rounded-lg font-medium',
-      'transition-all duration-200 ease-in-out',
+      'border-none rounded-md', // Minimal border radius for flat design
+      'transition-colors duration-200 ease-in-out', // Only color transitions, no transform
       'select-none touch-manipulation',
 
       // Size classes
@@ -209,12 +234,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       // Focus ring classes
       getFocusRingClasses(variant),
 
-      // State classes
+      // State classes - minimal visual changes
       {
         'w-full': fullWidth,
         'opacity-50 cursor-not-allowed': isDisabled,
         'cursor-wait': loading,
-        'transform active:scale-95': !isDisabled,
+        // Removed active:scale-95 for flat design - no 3D effects
       }
     );
 

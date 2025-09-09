@@ -3,16 +3,23 @@ import { fn } from '@storybook/test';
 import { TextField } from './TextField';
 
 /**
- * The TextField component is a comprehensive text input with validation states, icons,
- * and accessibility features. It supports multiple sizes, validation states, and proper
- * ARIA attributes for form accessibility following the AppFlowy design system.
+ * The TextField component embraces flat, borderless minimalism inspired by Notion and AppFlowy.
+ * It prioritizes content over chrome using typography, whitespace, and subtle visual cues.
+ * Features three variants: borderless (pure flat), bottom-line (focus indicator), and subtle-outline (minimal border).
+ *
+ * ## Flat Design Principles
+ * - Borderless by default for clean, minimal appearance
+ * - Typography-first hierarchy with generous spacing
+ * - Subtle interaction feedback without visual overwhelm
+ * - Neutral color palette with soft accent colors
+ * - Accessibility compliance within flat design constraints
  *
  * ## Usage Guidelines
+ * - Use borderless variant for pure flat design
+ * - Use bottom-line variant when focus indication is needed
+ * - Use subtle-outline variant for alternative minimal styling
  * - Always provide meaningful labels for accessibility
- * - Use helper text to guide users
- * - Show error messages clearly with proper contrast
- * - Use appropriate input types for better UX
- * - Consider character limits for user guidance
+ * - Show error messages with minimal red accents
  */
 const meta: Meta<typeof TextField> = {
   title: 'UI Components/TextField',
@@ -37,6 +44,11 @@ const meta: Meta<typeof TextField> = {
       control: 'select',
       options: ['sm', 'md', 'lg'],
       description: 'Size of the input field',
+    },
+    variant: {
+      control: 'select',
+      options: ['borderless', 'bottom-line', 'subtle-outline'],
+      description: 'Design variant for flat minimalist styling',
     },
     state: {
       control: 'select',
@@ -296,16 +308,111 @@ export const AllSizes: Story = {
 };
 
 /**
+ * All text field variants comparison
+ */
+export const AllVariants: Story = {
+  render: () => (
+    <div className="space-y-6 w-80">
+      <TextField
+        label="Borderless (Default)"
+        variant="borderless"
+        placeholder="Pure flat design with no borders"
+      />
+      <TextField
+        label="Bottom Line"
+        variant="bottom-line"
+        placeholder="Shows line on focus"
+      />
+      <TextField
+        label="Subtle Outline"
+        variant="subtle-outline"
+        placeholder="Minimal outline on focus"
+      />
+    </div>
+  ),
+  parameters: {
+    layout: 'centered',
+  },
+};
+
+/**
  * All text field states comparison
  */
 export const AllStates: Story = {
   render: () => (
-    <div className="space-y-4 w-80">
+    <div className="space-y-6 w-80">
       <TextField label="Default" placeholder="Default state" />
       <TextField label="Success" state="success" value="Valid input" />
       <TextField label="Error" error="This field is required" />
       <TextField label="Disabled" disabled value="Disabled input" />
     </div>
+  ),
+  parameters: {
+    layout: 'centered',
+  },
+};
+
+/**
+ * Text field with bottom line variant
+ */
+export const BottomLine: Story = {
+  args: {
+    label: 'Email Address',
+    type: 'email',
+    variant: 'bottom-line',
+    placeholder: 'you@example.com',
+    helperText: 'Focus to see the bottom line appear',
+  },
+};
+
+/**
+ * Text field with subtle outline variant
+ */
+export const SubtleOutline: Story = {
+  args: {
+    label: 'Full Name',
+    variant: 'subtle-outline',
+    placeholder: 'Enter your full name',
+    helperText: 'Minimal outline appears on focus',
+  },
+};
+
+/**
+ * Flat design form example with different variants
+ */
+export const FlatDesignForm: Story = {
+  render: () => (
+    <form className="space-y-6 w-96">
+      <TextField
+        label="First Name"
+        variant="borderless"
+        placeholder="Enter your first name"
+        required
+      />
+      <TextField
+        label="Email Address"
+        type="email"
+        variant="bottom-line"
+        placeholder="you@example.com"
+        required
+        helperText="We'll use this to send you updates"
+      />
+      <TextField
+        label="Phone Number"
+        type="tel"
+        variant="subtle-outline"
+        placeholder="+1 (555) 123-4567"
+        helperText="Optional - for account recovery"
+      />
+      <TextField
+        label="Bio"
+        variant="borderless"
+        placeholder="Tell us about yourself"
+        maxLength={160}
+        showCharCount
+        helperText="This will be shown on your profile"
+      />
+    </form>
   ),
   parameters: {
     layout: 'centered',

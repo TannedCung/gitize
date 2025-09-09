@@ -52,11 +52,11 @@ describe('Button Component', () => {
       variant: ButtonProps['variant'];
       expectedClass: string;
     }> = [
-      { variant: 'primary', expectedClass: 'bg-primary-500' },
-      { variant: 'secondary', expectedClass: 'bg-gray-100' },
+      { variant: 'primary', expectedClass: 'bg-accent-blue-500' },
+      { variant: 'secondary', expectedClass: 'bg-neutral-100' },
       { variant: 'outline', expectedClass: 'bg-transparent' },
       { variant: 'ghost', expectedClass: 'bg-transparent' },
-      { variant: 'danger', expectedClass: 'bg-error-500' },
+      { variant: 'danger', expectedClass: 'bg-accent-red-500' },
     ];
 
     variants.forEach(({ variant, expectedClass }) => {
@@ -70,15 +70,15 @@ describe('Button Component', () => {
     it('defaults to primary variant when no variant is specified', () => {
       renderWithProviders(<Button>Default Button</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-primary-500');
+      expect(button).toHaveClass('bg-accent-blue-500');
     });
   });
 
   describe('Sizes', () => {
     const sizes: Array<{ size: ButtonProps['size']; expectedClass: string }> = [
-      { size: 'sm', expectedClass: 'px-3 py-1.5 text-sm' },
-      { size: 'md', expectedClass: 'px-4 py-2 text-sm' },
-      { size: 'lg', expectedClass: 'px-6 py-3 text-base' },
+      { size: 'sm', expectedClass: 'px-3 py-1.5 text-sm font-normal' },
+      { size: 'md', expectedClass: 'px-4 py-2 text-sm font-medium' },
+      { size: 'lg', expectedClass: 'px-6 py-3 text-base font-semibold' },
     ];
 
     sizes.forEach(({ size, expectedClass }) => {
@@ -92,7 +92,7 @@ describe('Button Component', () => {
     it('defaults to medium size when no size is specified', () => {
       renderWithProviders(<Button>Default Button</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('px-4 py-2 text-sm');
+      expect(button).toHaveClass('px-4 py-2 text-sm font-medium');
     });
   });
 
@@ -319,7 +319,7 @@ describe('Button Component', () => {
       );
       const button = screen.getByRole('button');
       expect(button).toHaveClass('custom-class');
-      expect(button).toHaveClass('bg-primary-500'); // Default primary variant class
+      expect(button).toHaveClass('bg-accent-blue-500'); // Default primary variant class
     });
   });
 
@@ -351,7 +351,7 @@ describe('Button Component', () => {
       renderWithProviders(<Button>Focus Button</Button>);
       const button = screen.getByRole('button');
       expect(button).toHaveClass('focus:outline-none');
-      expect(button).toHaveClass('focus:ring-2');
+      expect(button).toHaveClass('focus:ring-1'); // Minimal focus ring for flat design
     });
 
     it('has proper focus ring colors for different variants', () => {
@@ -359,11 +359,11 @@ describe('Button Component', () => {
         variant: ButtonProps['variant'];
         focusClass: string;
       }> = [
-        { variant: 'primary', focusClass: 'focus:ring-primary-500' },
-        { variant: 'secondary', focusClass: 'focus:ring-gray-500' },
-        { variant: 'outline', focusClass: 'focus:ring-gray-500' },
-        { variant: 'ghost', focusClass: 'focus:ring-gray-500' },
-        { variant: 'danger', focusClass: 'focus:ring-error-500' },
+        { variant: 'primary', focusClass: 'focus:ring-accent-blue-500' },
+        { variant: 'secondary', focusClass: 'focus:ring-neutral-500' },
+        { variant: 'outline', focusClass: 'focus:ring-neutral-500' },
+        { variant: 'ghost', focusClass: 'focus:ring-neutral-500' },
+        { variant: 'danger', focusClass: 'focus:ring-accent-red-500' },
       ];
 
       variants.forEach(({ variant, focusClass }) => {

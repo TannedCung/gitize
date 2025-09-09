@@ -22,6 +22,11 @@ export type TextFieldType =
   | 'number';
 
 /**
+ * TextField design variants for flat minimalist design
+ */
+export type TextFieldVariant = 'borderless' | 'bottom-line' | 'subtle-outline';
+
+/**
  * TextField component props
  */
 export interface TextFieldProps extends Omit<BaseComponentProps, 'children'> {
@@ -37,6 +42,8 @@ export interface TextFieldProps extends Omit<BaseComponentProps, 'children'> {
   type?: TextFieldType;
   /** Input size variant */
   size?: Exclude<ComponentSize, 'xs' | 'xl'>;
+  /** Design variant for flat minimalist styling */
+  variant?: TextFieldVariant;
   /** Validation state */
   state?: TextFieldState;
   /** Error message to display */
@@ -68,45 +75,68 @@ export interface TextFieldProps extends Omit<BaseComponentProps, 'children'> {
 }
 
 /**
- * Get state-specific classes for the input container
+ * Get variant-specific classes for flat minimalist design
  */
-const getStateClasses = (state: TextFieldState): string => {
-  const stateClasses = {
-    default: cn(
-      'border-gray-300 text-gray-900',
-      'focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500',
-      'dark:border-gray-600 dark:text-gray-100',
-      'dark:focus-within:border-primary-400 dark:focus-within:ring-primary-400'
+const getVariantClasses = (
+  variant: TextFieldVariant,
+  state: TextFieldState,
+  isFocused: boolean
+): string => {
+  const baseClasses = 'text-neutral-900 dark:text-neutral-100 bg-transparent';
+
+  if (state === 'disabled') {
+    return cn(
+      baseClasses,
+      'text-neutral-400 dark:text-neutral-600 cursor-not-allowed',
+      variant === 'subtle-outline' &&
+        'border border-neutral-200 dark:border-neutral-700'
+    );
+  }
+
+  const variantClasses = {
+    borderless: cn(
+      baseClasses,
+      'border-0'
+      // Focus state - no visual change for pure borderless
     ),
-    success: cn(
-      'border-success-500 text-gray-900',
-      'focus-within:border-success-600 focus-within:ring-1 focus-within:ring-success-500',
-      'dark:border-success-400 dark:text-gray-100',
-      'dark:focus-within:border-success-300 dark:focus-within:ring-success-400'
+    'bottom-line': cn(
+      baseClasses,
+      'border-0 border-b',
+      // Default state - transparent bottom border
+      'border-transparent',
+      // Focus state - show bottom line
+      isFocused && 'border-accent-blue-500 dark:border-accent-blue-400',
+      // Error state
+      state === 'error' && 'border-accent-red-500 dark:border-accent-red-400',
+      // Success state
+      state === 'success' &&
+        'border-accent-green-500 dark:border-accent-green-400'
     ),
-    error: cn(
-      'border-error-500 text-gray-900',
-      'focus-within:border-error-600 focus-within:ring-1 focus-within:ring-error-500',
-      'dark:border-error-400 dark:text-gray-100',
-      'dark:focus-within:border-error-300 dark:focus-within:ring-error-400'
-    ),
-    disabled: cn(
-      'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed',
-      'dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+    'subtle-outline': cn(
+      baseClasses,
+      'border border-transparent',
+      // Focus state - subtle outline
+      isFocused && 'border-neutral-300 dark:border-neutral-600',
+      // Error state
+      state === 'error' && 'border-accent-red-300 dark:border-accent-red-600',
+      // Success state
+      state === 'success' &&
+        'border-accent-green-300 dark:border-accent-green-600'
     ),
   };
 
-  return stateClasses[state];
+  return variantClasses[variant];
 };
 
 /**
- * Get size-specific classes for the input container
+ * Get size-specific classes for generous spacing in flat design
  */
 const getSizeClasses = (size: 'sm' | 'md' | 'lg'): string => {
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-3 py-2 text-sm',
-    lg: 'px-4 py-3 text-base',
+    // Generous padding for airy, spacious feel
+    sm: 'px-0 py-2 text-sm',
+    md: 'px-0 py-3 text-base',
+    lg: 'px-0 py-4 text-lg',
   };
 
   return sizeClasses[size];
@@ -140,6 +170,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       defaultValue,
       type = 'text',
       size = 'md',
+      variant = 'borderless',
       state = 'default',
       error,
       helperText,
@@ -190,11 +221,12 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
     };
 
     const inputClasses = cn(
-      // Base styles
-      'w-full bg-transparent border-0 outline-none',
-      'placeholder:text-gray-400 dark:placeholder:text-gray-500',
+      // Base styles for flat design
+      'w-full bg-transparent outline-none',
+      'placeholder:text-neutral-400 dark:placeholder:text-neutral-500',
+      'transition-colors duration-200 ease-in-out',
 
-      // Size-specific padding is handled by container
+      // Size-specific text sizing
       getSizeClasses(size)
         .split(' ')
         .filter(cls => cls.startsWith('text-')),
@@ -207,47 +239,61 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
     );
 
     const containerClasses = cn(
-      // Base container styles
-      'relative flex items-center border rounded-lg',
+      // Base container styles for flat design - no background, no rounded corners
+      'relative flex items-center',
       'transition-all duration-200 ease-in-out',
-      'bg-white dark:bg-gray-900',
 
-      // Size classes
+      // Size classes for generous spacing
       getSizeClasses(size),
 
-      // State classes
-      getStateClasses(actualState),
+      // Variant-specific styling
+      getVariantClasses(variant, actualState, isFocused),
 
-      // Focus state
+      // Icon spacing adjustments
       {
-        'ring-2 ring-offset-2 dark:ring-offset-gray-900':
-          isFocused && actualState !== 'disabled',
+        'pl-8': startIcon && variant !== 'borderless',
+        'pr-8': endIcon && variant !== 'borderless',
+        'pl-6': startIcon && variant === 'borderless',
+        'pr-6': endIcon && variant === 'borderless',
       },
 
       className
     );
 
-    const labelClasses = cn('block text-sm font-medium mb-1.5', {
-      'text-gray-700 dark:text-gray-300': actualState === 'default',
-      'text-success-700 dark:text-success-300': actualState === 'success',
-      'text-error-700 dark:text-error-300': actualState === 'error',
-      'text-gray-500 dark:text-gray-400': actualState === 'disabled',
-    });
+    const labelClasses = cn(
+      // Typography-first hierarchy with generous spacing
+      'block text-sm font-medium mb-3',
+      'transition-colors duration-200 ease-in-out',
+      {
+        'text-neutral-700 dark:text-neutral-300': actualState === 'default',
+        'text-accent-green-700 dark:text-accent-green-300':
+          actualState === 'success',
+        'text-accent-red-700 dark:text-accent-red-300': actualState === 'error',
+        'text-neutral-400 dark:text-neutral-500': actualState === 'disabled',
+      }
+    );
 
-    const helperTextClasses = cn('mt-1.5 text-xs', {
-      'text-gray-600 dark:text-gray-400':
-        actualState === 'default' || actualState === 'success',
-      'text-error-600 dark:text-error-400': actualState === 'error',
-      'text-gray-500 dark:text-gray-500': actualState === 'disabled',
-    });
+    const helperTextClasses = cn(
+      // Generous spacing and minimal styling for flat design
+      'mt-2 text-xs leading-relaxed',
+      'transition-colors duration-200 ease-in-out',
+      {
+        'text-neutral-600 dark:text-neutral-400':
+          actualState === 'default' || actualState === 'success',
+        'text-accent-red-600 dark:text-accent-red-400': actualState === 'error',
+        'text-neutral-400 dark:text-neutral-500': actualState === 'disabled',
+      }
+    );
 
     const iconClasses = cn(
-      'flex-shrink-0 text-gray-400 dark:text-gray-500',
+      'flex-shrink-0 transition-colors duration-200 ease-in-out',
+      'text-neutral-400 dark:text-neutral-500',
       getIconSizeClasses(size),
       {
-        'text-success-500 dark:text-success-400': actualState === 'success',
-        'text-error-500 dark:text-error-400': actualState === 'error',
-        'text-gray-300 dark:text-gray-600': actualState === 'disabled',
+        'text-accent-green-500 dark:text-accent-green-400':
+          actualState === 'success',
+        'text-accent-red-500 dark:text-accent-red-400': actualState === 'error',
+        'text-neutral-300 dark:text-neutral-600': actualState === 'disabled',
       }
     );
 
@@ -272,7 +318,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         <div className={containerClasses}>
           {/* Start Icon */}
           {startIcon && (
-            <div className={cn(iconClasses, 'mr-3')}>{startIcon}</div>
+            <div className={cn(iconClasses, 'mr-2')}>{startIcon}</div>
           )}
 
           {/* Input */}
@@ -301,11 +347,11 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           />
 
           {/* End Icon */}
-          {endIcon && <div className={cn(iconClasses, 'ml-3')}>{endIcon}</div>}
+          {endIcon && <div className={cn(iconClasses, 'ml-2')}>{endIcon}</div>}
         </div>
 
         {/* Helper Text and Character Count */}
-        <div className="flex justify-between items-start mt-1.5">
+        <div className="flex justify-between items-start mt-2">
           <div className="flex-1">
             {/* Error Message */}
             {error && (
@@ -325,15 +371,18 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           {/* Character Count */}
           {showCount && (
             <span
-              className={cn('text-xs ml-2 flex-shrink-0', {
-                'text-gray-500 dark:text-gray-400':
-                  currentLength < maxLength! * 0.8,
-                'text-warning-600 dark:text-warning-400':
-                  currentLength >= maxLength! * 0.8 &&
-                  currentLength < maxLength!,
-                'text-error-600 dark:text-error-400':
-                  currentLength >= maxLength!,
-              })}
+              className={cn(
+                'text-xs ml-3 flex-shrink-0 transition-colors duration-200',
+                {
+                  'text-neutral-500 dark:text-neutral-400':
+                    currentLength < maxLength! * 0.8,
+                  'text-accent-amber-600 dark:text-accent-amber-400':
+                    currentLength >= maxLength! * 0.8 &&
+                    currentLength < maxLength!,
+                  'text-accent-red-600 dark:text-accent-red-400':
+                    currentLength >= maxLength!,
+                }
+              )}
             >
               {currentLength}/{maxLength}
             </span>

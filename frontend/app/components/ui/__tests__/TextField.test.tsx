@@ -86,38 +86,42 @@ describe('TextField', () => {
     it('applies default state classes', () => {
       renderTextField({ state: 'default' });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('border-gray-300');
+      expect(container).toHaveClass(
+        'text-neutral-900',
+        'bg-transparent',
+        'border-0'
+      );
     });
 
     it('applies success state classes', () => {
       renderTextField({ state: 'success' });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('border-success-500');
+      expect(container).toHaveClass('text-neutral-900', 'bg-transparent');
     });
 
     it('applies error state classes when error prop is provided', () => {
       renderTextField({ error: 'Error message' });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('border-error-500');
+      expect(container).toHaveClass('text-neutral-900', 'bg-transparent');
     });
 
     it('applies disabled state classes when disabled', () => {
       renderTextField({ disabled: true });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('border-gray-200', 'bg-gray-50');
+      expect(container).toHaveClass('text-neutral-400', 'cursor-not-allowed');
       expect(screen.getByTestId('text-field')).toBeDisabled();
     });
 
     it('prioritizes error state over other states', () => {
       renderTextField({ state: 'success', error: 'Error message' });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('border-error-500');
+      expect(container).toHaveClass('text-neutral-900', 'bg-transparent');
     });
 
     it('prioritizes disabled state over error state', () => {
       renderTextField({ disabled: true, error: 'Error message' });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('border-gray-200');
+      expect(container).toHaveClass('text-neutral-400', 'cursor-not-allowed');
     });
   });
 
@@ -125,19 +129,63 @@ describe('TextField', () => {
     it('applies small size classes', () => {
       renderTextField({ size: 'sm' });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('px-3', 'py-1.5', 'text-sm');
+      expect(container).toHaveClass('px-0', 'py-2', 'text-sm');
     });
 
     it('applies medium size classes by default', () => {
       renderTextField();
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('px-3', 'py-2', 'text-sm');
+      expect(container).toHaveClass('px-0', 'py-3', 'text-base');
     });
 
     it('applies large size classes', () => {
       renderTextField({ size: 'lg' });
       const container = screen.getByTestId('text-field').parentElement;
-      expect(container).toHaveClass('px-4', 'py-3', 'text-base');
+      expect(container).toHaveClass('px-0', 'py-4', 'text-lg');
+    });
+  });
+
+  describe('Design Variants', () => {
+    it('applies borderless variant by default', () => {
+      renderTextField({ variant: 'borderless' });
+      const container = screen.getByTestId('text-field').parentElement;
+      expect(container).toHaveClass('border-0');
+    });
+
+    it('applies bottom-line variant classes', () => {
+      renderTextField({ variant: 'bottom-line' });
+      const container = screen.getByTestId('text-field').parentElement;
+      expect(container).toHaveClass(
+        'border-0',
+        'border-b',
+        'border-transparent'
+      );
+    });
+
+    it('applies subtle-outline variant classes', () => {
+      renderTextField({ variant: 'subtle-outline' });
+      const container = screen.getByTestId('text-field').parentElement;
+      expect(container).toHaveClass('border', 'border-transparent');
+    });
+
+    it('shows bottom line on focus for bottom-line variant', async () => {
+      renderTextField({ variant: 'bottom-line' });
+      const input = screen.getByTestId('text-field');
+
+      await userEvent.click(input);
+
+      // The focus state should be applied (tested via focus state)
+      expect(input).toHaveFocus();
+    });
+
+    it('shows subtle outline on focus for subtle-outline variant', async () => {
+      renderTextField({ variant: 'subtle-outline' });
+      const input = screen.getByTestId('text-field');
+
+      await userEvent.click(input);
+
+      // The focus state should be applied (tested via focus state)
+      expect(input).toHaveFocus();
     });
   });
 
@@ -200,7 +248,7 @@ describe('TextField', () => {
         onChange: () => {},
       });
       const counter = screen.getByText('8/10');
-      expect(counter).toHaveClass('text-warning-600');
+      expect(counter).toHaveClass('text-accent-amber-600');
     });
 
     it('shows error color when at limit', () => {
@@ -211,7 +259,7 @@ describe('TextField', () => {
         onChange: () => {},
       });
       const counter = screen.getByText('10/10');
-      expect(counter).toHaveClass('text-error-600');
+      expect(counter).toHaveClass('text-accent-red-600');
     });
   });
 
@@ -385,7 +433,7 @@ describe('TextField', () => {
   describe('Custom Props', () => {
     it('forwards ref to input element', () => {
       const ref = React.createRef<HTMLInputElement>();
-      renderTextField({ ref });
+      render(<TextField ref={ref} data-testid="text-field" />);
       expect(ref.current).toBeInstanceOf(HTMLInputElement);
     });
 

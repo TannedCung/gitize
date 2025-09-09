@@ -21,10 +21,11 @@ export function ButtonDemo() {
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          AppFlowy Button Component Demo
+          Flat Minimalist Button Component Demo
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Comprehensive button component with all variants, sizes, and states
+          Borderless, flat design button component with typography-first
+          hierarchy and subtle interactions
         </p>
       </div>
 

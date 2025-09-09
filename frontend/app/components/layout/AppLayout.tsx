@@ -60,7 +60,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </span>
             </div>
             <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hidden xs:block">
-              GitHub Trending
+              Gitize
             </span>
             <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white block xs:hidden">
               GT

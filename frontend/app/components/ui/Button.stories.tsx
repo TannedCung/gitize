@@ -3,17 +3,18 @@ import { fn } from '@storybook/test';
 import { Button } from './Button';
 
 /**
- * The Button component is a fundamental interactive element that supports multiple variants,
- * sizes, and states. It includes proper accessibility features, keyboard navigation, and
- * loading states following the AppFlowy design system.
+ * The Button component follows flat, borderless minimalist design principles with typography-first
+ * hierarchy. It supports multiple variants, sizes, and states while maintaining a clean, lightweight
+ * aesthetic. Features subtle hover states and minimal focus indicators for accessibility compliance.
  *
- * ## Usage Guidelines
- * - Use `primary` variant for main actions
- * - Use `secondary` for secondary actions
- * - Use `outline` for less prominent actions
- * - Use `ghost` for subtle actions
- * - Use `danger` for destructive actions
- * - Always provide meaningful labels for accessibility
+ * ## Flat Design Guidelines
+ * - `primary` variant: Flat solid background, no borders or shadows
+ * - `secondary` variant: Light gray background, borderless design
+ * - `outline` variant: Transparent background with subtle hover states
+ * - `ghost` variant: Completely flat, typography-weight based hierarchy
+ * - `danger` variant: Flat error styling without heavy visual effects
+ * - Uses typography weight instead of heavy styling for visual hierarchy
+ * - Minimal focus states that maintain flat aesthetic
  */
 const meta: Meta<typeof Button> = {
   title: 'UI Components/Button',
