@@ -1,10 +1,10 @@
 # Multi-stage build for optimized production image
-FROM rust:1.78 as builder
+FROM rust:1.82 as builder
 
 WORKDIR /app
 
-# Install diesel CLI for migrations (compatible version)
-RUN cargo install diesel_cli --version 2.1.1 --no-default-features --features postgres
+# Install diesel CLI for migrations
+RUN cargo install diesel_cli --no-default-features --features postgres
 
 # Copy dependency files first for better caching
 COPY Cargo.toml Cargo.lock ./
