@@ -6,11 +6,11 @@ import {
   useSearchRepositories,
   useAllRepositories,
 } from '../hooks/useRepositories';
-import { RepositoryCard } from './ui/RepositoryCard';
+import { LazyRepositoryCard } from './ui/LazyRepositoryCard';
 import { FilterPanel, FilterOptions } from './ui/FilterPanel';
 import { SearchBar } from './ui/SearchBar';
-import { Loading, RepositoryCardSkeleton } from './ui/Loading';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { Loading, RepositoryCardSkeleton, Button, Alert } from './ui';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface TrendingFeedProps {
   className?: string;
@@ -20,6 +20,7 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchMode, setIsSearchMode] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Convert FilterOptions to API query format
   const trendingQueryParams = {
@@ -99,36 +100,35 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
   if (activeQuery.error) {
     return (
       <div className={`${className}`}>
-        <div className="text-center py-12">
-          <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            Something went wrong
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {activeQuery.error instanceof Error
-              ? activeQuery.error.message
-              : 'Failed to load repositories'}
-          </p>
-          <button
-            onClick={() => activeQuery.refetch()}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            Try again
-          </button>
+        <div className="max-w-2xl mx-auto">
+          <Alert variant="error" title="Something went wrong">
+            <p className="mb-4">
+              {activeQuery.error instanceof Error
+                ? activeQuery.error.message
+                : 'Failed to load repositories'}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => activeQuery.refetch()}
+            >
+              Try again
+            </Button>
+          </Alert>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`${className}`}>
+    <div className={`${className}`} role="main">
       {/* Header */}
-      <div className="mb-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+      <header className="mb-8 lg:mb-12">
+        <div className="text-center mb-8 lg:mb-10">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 lg:mb-6 px-4">
             {isSearchMode ? 'Search Results' : 'Trending Repositories'}
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4 leading-relaxed">
             {isSearchMode
               ? `Found ${repositories.length} repositories matching "${searchQuery}"`
               : 'Discover the most popular GitHub repositories with AI-powered summaries'}
@@ -136,19 +136,45 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
         </div>
 
         {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-8 lg:mb-10 px-4">
           <SearchBar
             onSearch={handleSearch}
             initialValue={searchQuery}
             placeholder="Search repositories by name, description, or topic..."
           />
         </div>
-      </div>
+      </header>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden">
+          <Button
+            variant="outline"
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="w-full justify-between"
+            aria-expanded={showMobileFilters}
+            aria-controls="mobile-filters"
+            aria-label={
+              showMobileFilters
+                ? 'Hide filters and options'
+                : 'Show filters and options'
+            }
+          >
+            <span>Filters & Options</span>
+            <ChevronDownIcon
+              className={`h-4 w-4 transition-transform ${showMobileFilters ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            />
+          </Button>
+        </div>
+
         {/* Sidebar with Filters */}
-        <div className="lg:w-80 flex-shrink-0">
-          <div className="sticky top-4">
+        <aside
+          className={`lg:w-80 flex-shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}
+          id="mobile-filters"
+          aria-label="Repository filters and options"
+        >
+          <div className="lg:sticky lg:top-6 space-y-6">
             <FilterPanel
               filters={filters}
               onFiltersChange={handleFiltersChange}
@@ -156,43 +182,58 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
 
             {/* Results Summary */}
             {!activeQuery.isLoading && (
-              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+              <div
+                className="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
                   {isSearchMode ? (
                     <>
-                      <span className="font-medium">{repositories.length}</span>{' '}
+                      <span className="text-primary-600 dark:text-primary-400">
+                        {repositories.length}
+                      </span>{' '}
                       repositories found
                       {searchQuery && (
                         <>
                           {' '}
                           for &quot;
-                          <span className="font-medium">{searchQuery}</span>
+                          <span className="text-gray-900 dark:text-white">
+                            {searchQuery}
+                          </span>
                           &quot;
                         </>
                       )}
                     </>
                   ) : (
                     <>
-                      <span className="font-medium">{repositories.length}</span>{' '}
+                      <span className="text-primary-600 dark:text-primary-400">
+                        {repositories.length}
+                      </span>{' '}
                       trending repositories
                     </>
                   )}
                 </p>
                 {activeQuery.hasNextPage && (
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                     Scroll down to load more
                   </p>
                 )}
               </div>
             )}
           </div>
-        </div>
+        </aside>
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0">
           {/* Loading State */}
           {activeQuery.isLoading && repositories.length === 0 && (
-            <div className="space-y-6">
+            <div
+              className="space-y-6"
+              role="status"
+              aria-label="Loading repositories"
+            >
+              <span className="sr-only">Loading repositories...</span>
               {Array.from({ length: 5 }).map((_, index) => (
                 <RepositoryCardSkeleton key={index} />
               ))}
@@ -201,10 +242,13 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
 
           {/* Empty State */}
           {!activeQuery.isLoading && repositories.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 dark:text-gray-600 mb-4">
+            <div className="text-center py-16" role="status">
+              <div
+                className="text-gray-400 dark:text-gray-600 mb-6"
+                aria-hidden="true"
+              >
                 <svg
-                  className="mx-auto h-12 w-12"
+                  className="mx-auto h-16 w-16"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -212,17 +256,17 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                 {isSearchMode
                   ? 'No repositories found'
                   : 'No trending repositories'}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
                 {isSearchMode
                   ? 'Try adjusting your search query or filters'
                   : 'Check back later for trending repositories'}
@@ -232,38 +276,44 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
 
           {/* Repository List */}
           {repositories.length > 0 && (
-            <div className="space-y-6">
-              {repositories.map((repository, index) => (
-                <RepositoryCard
-                  key={`${repository.id}-${index}`}
-                  repository={repository}
-                  showSummary={true}
+            <section aria-label="Repository list">
+              <div className="space-y-6 sm:space-y-8">
+                {repositories.map((repository, index) => (
+                  <LazyRepositoryCard
+                    key={`${repository.id}-${index}`}
+                    repository={repository}
+                    showSummary={true}
+                  />
+                ))}
+
+                {/* Load More Sentinel */}
+                <div
+                  id="load-more-sentinel"
+                  className="h-4"
+                  aria-hidden="true"
                 />
-              ))}
 
-              {/* Load More Sentinel */}
-              <div id="load-more-sentinel" className="h-4" />
-
-              {/* Loading More Indicator */}
-              {activeQuery.isFetchingNextPage && (
-                <div className="py-8">
-                  <Loading text="Loading more repositories..." />
-                </div>
-              )}
-
-              {/* End of Results */}
-              {!activeQuery.hasNextPage &&
-                !activeQuery.isFetchingNextPage &&
-                repositories.length > 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 dark:text-gray-500">
-                      You&apos;ve reached the end of the results
-                    </p>
+                {/* Loading More Indicator */}
+                {activeQuery.isFetchingNextPage && (
+                  <div className="py-12" role="status" aria-live="polite">
+                    <Loading text="Loading more repositories..." />
                   </div>
                 )}
-            </div>
+
+                {/* End of Results */}
+                {!activeQuery.hasNextPage &&
+                  !activeQuery.isFetchingNextPage &&
+                  repositories.length > 0 && (
+                    <div className="text-center py-12" role="status">
+                      <p className="text-gray-500 dark:text-gray-500 text-lg">
+                        You&apos;ve reached the end of the results
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </section>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );
