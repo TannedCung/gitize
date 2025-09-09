@@ -1,0 +1,123 @@
+/* Optimized theme transition styles */
+
+/* Use CSS containment for better performance */
+.theme-transition {
+  contain: layout style paint;
+}
+
+/* Optimized transition properties - only animate what's necessary */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Prevent layout thrashing during transitions */
+  will-change: background-color, border-color, color, box-shadow;
+}
+
+/* Disable transitions during initial load for better performance */
+.theme-transition.no-transition,
+.theme-transition.no-transition *,
+.theme-transition.no-transition *::before,
+.theme-transition.no-transition *::after {
+  transition: none !important;
+}
+
+/* Optimize for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  .theme-transition *,
+  .theme-transition *::before,
+  .theme-transition *::after {
+    transition-duration: 0ms !important;
+  }
+}
+
+/* GPU acceleration for smooth transitions */
+.theme-transition {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize specific component transitions */
+.theme-transition .bg-background,
+.theme-transition .bg-surface,
+.theme-transition .text-text,
+.theme-transition .text-textSecondary,
+.theme-transition .border-border {
+  transition-property: background-color, color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevent flash of unstyled content during theme switch */
+.theme-loading {
+  visibility: hidden;
+}
+
+.theme-ready {
+  visibility: visible;
+}
+
+/* Critical CSS for immediate theme application */
+:root {
+  /* Light theme defaults */
+  --color-primary: #00b5ff;
+  --color-secondary: #9327ff;
+  --color-accent: #e3006d;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #1e293b;
+  --color-textSecondary: #64748b;
+  --color-border: #e2e8f0;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+}
+
+:root.dark {
+  /* Dark theme overrides */
+  --color-primary: #00c8ff;
+  --color-secondary: #9327ff;
+  --color-accent: #fb006d;
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-text: #f1f5f9;
+  --color-textSecondary: #94a3b8;
+  --color-border: #334155;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Performance optimization: Use CSS custom properties for frequently changing values */
+.theme-optimized {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+/* Lazy loading optimization for theme-dependent images */
+.theme-image {
+  opacity: 0;
+  transition: opacity 200ms ease-in-out;
+}
+
+.theme-image.loaded {
+  opacity: 1;
+}
+
+/* Optimize scrollbar theming */
+.theme-transition ::-webkit-scrollbar {
+  transition: background-color 200ms ease;
+}
+
+.theme-transition ::-webkit-scrollbar-track {
+  transition: background-color 200ms ease;
+}
+
+.theme-transition ::-webkit-scrollbar-thumb {
+  transition: background-color 200ms ease;
+}

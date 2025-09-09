@@ -4,6 +4,7 @@ import './globals.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { QueryProvider } from './providers/QueryProvider';
 import { AppLayout } from './components/layout/AppLayout';
+import { AccessibilityProvider } from './components/ui/AccessibilityProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,11 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <QueryProvider>
-            <AppLayout>{children}</AppLayout>
-          </QueryProvider>
-        </ThemeProvider>
+        <AccessibilityProvider>
+          <ThemeProvider>
+            <QueryProvider>
+              <AppLayout>{children}</AppLayout>
+            </QueryProvider>
+          </ThemeProvider>
+        </AccessibilityProvider>
       </body>
     </html>
   );

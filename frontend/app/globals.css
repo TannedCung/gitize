@@ -2,38 +2,322 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbar for webkit browsers */
-@layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgb(156 163 175) transparent;
+/* Import optimized theme transitions */
+@import './styles/theme-transitions.css';
+
+/* CSS Custom Properties for Design Tokens */
+:root {
+  /* Default light theme tokens */
+  --color-primary: #00b5ff;
+  --color-secondary: #9327ff;
+  --color-accent: #e3006d;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #1e293b;
+  --color-textSecondary: #64748b;
+  --color-border: #e2e8f0;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.375rem;
+  --border-radius-lg: 0.5rem;
+  --border-radius-xl: 0.75rem;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Global scrollbar styles */
+@layer base {
+  /* Apply default scrollbar to html and body */
+  html {
+    @apply scrollbar scroll-smooth;
   }
 
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgb(156 163 175);
-    border-radius: 3px;
-  }
-
-  .dark .scrollbar-thin {
-    scrollbar-color: rgb(75 85 99) transparent;
-  }
-
-  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgb(75 85 99);
+  body {
+    @apply scrollbar scroll-touch;
   }
 }
 
-/* Smooth transitions for theme changes */
-* {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Additional scrollbar utilities */
+@layer utilities {
+  /* Scrollbar visibility utilities */
+  .scrollbar-visible {
+    scrollbar-width: auto;
+  }
+
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Scrollbar gutter for consistent layout */
+  .scrollbar-gutter {
+    scrollbar-gutter: stable;
+  }
+
+  /* Custom scrollbar colors for specific contexts */
+  .scrollbar-primary::-webkit-scrollbar-thumb {
+    background: theme('colors.primary.500');
+  }
+
+  .scrollbar-primary::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.primary.600');
+  }
+
+  .scrollbar-secondary::-webkit-scrollbar-thumb {
+    background: theme('colors.secondary.500');
+  }
+
+  .scrollbar-secondary::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.secondary.600');
+  }
+}
+
+/* Enhanced smooth transitions for theme changes */
+.theme-transition * {
+  transition-property:
+    background-color, border-color, color, fill, stroke, box-shadow, opacity,
+    transform;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition-duration: 300ms;
+}
+
+/* Specific transitions for different elements */
+.theme-transition {
+  transition: background-color 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Preserve animations during theme transitions */
+.theme-transition *[class*='animate-'] {
+  transition-property:
+    background-color, border-color, color, fill, stroke, box-shadow;
+}
+
+/* Smooth transitions for AppFlowy brand elements */
+.theme-transition .brand-element {
+  transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Theme transition loading state */
+.theme-transitioning {
+  pointer-events: none;
+}
+
+.theme-transitioning::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(0, 181, 255, 0.1) 50%,
+    transparent 70%
+  );
+  animation: theme-transition-shimmer 300ms ease-out;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+@keyframes theme-transition-shimmer {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Mobile optimizations */
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent zoom on input focus on iOS */
+  @media screen and (max-width: 768px) {
+    input[type='text'],
+    input[type='email'],
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Better tap targets for mobile */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Smooth scrolling for mobile */
+  @media (max-width: 768px) {
+    html {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .border-gray-200 {
+      border-color: #000000;
+    }
+    .border-gray-300 {
+      border-color: #000000;
+    }
+    .text-gray-600 {
+      color: #000000;
+    }
+    .text-gray-500 {
+      color: #000000;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Focus visible improvements */
+  .focus-visible-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+  }
+
+  /* Design Token Utilities */
+  .bg-token-background {
+    background-color: var(--color-background);
+  }
+
+  .bg-token-surface {
+    background-color: var(--color-surface);
+  }
+
+  .bg-token-primary {
+    background-color: var(--color-primary);
+  }
+
+  .bg-token-secondary {
+    background-color: var(--color-secondary);
+  }
+
+  .bg-token-accent {
+    background-color: var(--color-accent);
+  }
+
+  .text-token-text {
+    color: var(--color-text);
+  }
+
+  .text-token-text-secondary {
+    color: var(--color-textSecondary);
+  }
+
+  .text-token-primary {
+    color: var(--color-primary);
+  }
+
+  .text-token-secondary {
+    color: var(--color-secondary);
+  }
+
+  .text-token-accent {
+    color: var(--color-accent);
+  }
+
+  .border-token-border {
+    border-color: var(--color-border);
+  }
+
+  .shadow-token-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-token-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-token-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-token-xl {
+    box-shadow: var(--shadow-xl);
+  }
+
+  .rounded-token-sm {
+    border-radius: var(--border-radius-sm);
+  }
+
+  .rounded-token-md {
+    border-radius: var(--border-radius-md);
+  }
+
+  .rounded-token-lg {
+    border-radius: var(--border-radius-lg);
+  }
+
+  .rounded-token-xl {
+    border-radius: var(--border-radius-xl);
+  }
+
+  /* AppFlowy Brand Utilities */
+  .appflowy-gradient {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      var(--color-secondary) 100%
+    );
+  }
+
+  .appflowy-gradient-text {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      var(--color-secondary) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .appflowy-glow {
+    box-shadow:
+      0 0 20px var(--color-primary),
+      0 0 40px var(--color-primary);
+  }
+
+  .appflowy-border-glow {
+    border: 1px solid var(--color-primary);
+    box-shadow: 0 0 10px rgba(0, 181, 255, 0.3);
+  }
 }
