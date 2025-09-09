@@ -41,6 +41,9 @@ pub fn stage() -> AdHoc {
             panic!("Failed to run database migrations: {}", e);
         }
 
-        rocket.manage(pool)
+        // Wrap in Arc to match the expected state type
+        let pool_arc = std::sync::Arc::new(pool);
+
+        rocket.manage(pool_arc)
     })
 }

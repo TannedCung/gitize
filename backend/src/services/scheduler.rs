@@ -159,11 +159,16 @@ impl SchedulerService {
         &self,
         job_sender: mpsc::UnboundedSender<ScheduledJobType>,
     ) -> Result<Job, SchedulerError> {
-        let job = Job::new("0 6 * * *", move |_uuid, _l| {
-            info!("Daily trending refresh job triggered");
-            if let Err(e) = job_sender.send(ScheduledJobType::DailyRefresh) {
-                error!("Failed to send daily refresh job signal: {}", e);
-            }
+        // Run daily at 6:00 AM UTC
+        // Format: sec min hour day month day_of_week
+        let job = Job::new_async("0 0 6 * * *", move |_uuid, _l| {
+            let sender = job_sender.clone();
+            Box::pin(async move {
+                info!("Daily trending refresh job triggered");
+                if let Err(e) = sender.send(ScheduledJobType::DailyRefresh) {
+                    error!("Failed to send daily refresh job signal: {}", e);
+                }
+            })
         })?;
 
         Ok(job)
@@ -173,11 +178,16 @@ impl SchedulerService {
         &self,
         job_sender: mpsc::UnboundedSender<ScheduledJobType>,
     ) -> Result<Job, SchedulerError> {
-        let job = Job::new("0 9 * * 0", move |_uuid, _l| {
-            info!("Weekly newsletter job triggered");
-            if let Err(e) = job_sender.send(ScheduledJobType::WeeklyNewsletter) {
-                error!("Failed to send weekly newsletter job signal: {}", e);
-            }
+        // Run weekly on Sundays at 9:00 AM UTC
+        // Format: sec min hour day month day_of_week (SUN instead of 0)
+        let job = Job::new_async("0 0 9 * * SUN", move |_uuid, _l| {
+            let sender = job_sender.clone();
+            Box::pin(async move {
+                info!("Weekly newsletter job triggered");
+                if let Err(e) = sender.send(ScheduledJobType::WeeklyNewsletter) {
+                    error!("Failed to send weekly newsletter job signal: {}", e);
+                }
+            })
         })?;
 
         Ok(job)
