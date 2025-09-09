@@ -5,7 +5,7 @@
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-github_trending_summarizer}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -14,11 +14,16 @@ services:
       - "${POSTGRES_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-github_trending_summarizer}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - app-network
 
   redis:
     image: redis:7-alpine
@@ -31,29 +36,47 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - app-network
+    command: redis-server --appendonly yes
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "${ROCKET_PORT:-8000}:${ROCKET_PORT:-8000}"
+      - "${ROCKET_PORT:-8000}:8000"
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-github_trending_summarizer}
       REDIS_URL: redis://redis:6379
-      ROCKET_ADDRESS: ${ROCKET_ADDRESS:-0.0.0.0}
-      ROCKET_PORT: ${ROCKET_PORT:-8000}
+      ROCKET_ADDRESS: 0.0.0.0
+      ROCKET_PORT: 8000
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}
       SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL}
+      RUST_LOG: ${RUST_LOG:-info}
+      # Alerting configuration
+      ALERTING_ENABLED: ${ALERTING_ENABLED:-true}
+      MAX_ALERTS: ${MAX_ALERTS:-1000}
+      ALERT_RETENTION_HOURS: ${ALERT_RETENTION_HOURS:-168}
+      ALERT_EMAIL_NOTIFICATIONS: ${ALERT_EMAIL_NOTIFICATIONS:-false}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-    working_dir: /app
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   frontend:
     build:
@@ -63,13 +86,26 @@ services:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NODE_ENV: production
     depends_on:
-      - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    working_dir: /app
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
