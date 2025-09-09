@@ -110,7 +110,9 @@ describe('RepositoryCard', () => {
   it('has correct external link', () => {
     render(<RepositoryCard repository={mockRepository} />);
 
-    const link = screen.getByRole('link', { name: 'awesome-project' });
+    const link = screen.getByRole('link', {
+      name: 'Visit awesome-project repository on GitHub',
+    });
     expect(link).toHaveAttribute(
       'href',
       'https://github.com/user/awesome-project'

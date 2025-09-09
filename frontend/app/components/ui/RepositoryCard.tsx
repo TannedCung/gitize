@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import {
-  CodeBracketIcon,
-  EyeIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+import { CodeBracketIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { BaseComponentProps } from './types';
+import { cn } from './utils';
+import { Button } from './Button';
+import { Alert } from './Alert';
+import { Spinner } from './Loading';
 
 export interface Repository {
   id: number;
@@ -28,7 +29,7 @@ export interface SummaryState {
   error?: string;
 }
 
-interface RepositoryCardProps {
+interface RepositoryCardProps extends BaseComponentProps {
   repository: Repository;
   showSummary?: boolean;
   summaryState?: SummaryState;
@@ -38,6 +39,8 @@ export function RepositoryCard({
   repository,
   showSummary = true,
   summaryState,
+  className,
+  ...props
 }: RepositoryCardProps) {
   const [summaryExpanded, setSummaryExpanded] = React.useState(false);
 
@@ -94,39 +97,73 @@ export function RepositoryCard({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
+    <article
+      className={cn(
+        'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700',
+        'p-4 sm:p-6 hover:shadow-appflowy-md transition-all duration-200 ease-in-out',
+        'touch-manipulation hover:border-primary-300 dark:hover:border-primary-600',
+        className
+      )}
+      data-testid={`repository-card-${repository.id}`}
+      {...props}
+    >
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-2 sm:space-y-0">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
             <a
               href={repository.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              className={cn(
+                'hover:text-primary-600 dark:hover:text-primary-400',
+                'transition-colors duration-200 break-words rounded-md',
+                'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+                'dark:focus:ring-offset-gray-800'
+              )}
+              aria-label={`Visit ${repository.name} repository on GitHub`}
             >
               {repository.name}
             </a>
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+          <p className="text-sm text-gray-600 dark:text-gray-400 break-words mt-1">
             by {repository.author}
           </p>
         </div>
-        <div className="flex items-center space-x-4 ml-4">
-          <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-            <StarIconSolid className="h-4 w-4 text-yellow-400" />
-            <span>{formatNumber(repository.stars)}</span>
+        <div className="flex items-center space-x-3 sm:space-x-4 sm:ml-4 flex-shrink-0">
+          <div className="flex items-center space-x-1.5 text-sm text-gray-600 dark:text-gray-400">
+            <StarIconSolid
+              className="h-4 w-4 text-warning-500 flex-shrink-0"
+              aria-hidden="true"
+            />
+            <span
+              className="font-medium"
+              aria-label={`${repository.stars} stars`}
+            >
+              {formatNumber(repository.stars)}
+            </span>
           </div>
-          <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-            <CodeBracketIcon className="h-4 w-4" />
-            <span>{formatNumber(repository.forks)}</span>
+          <div className="flex items-center space-x-1.5 text-sm text-gray-600 dark:text-gray-400">
+            <CodeBracketIcon
+              className="h-4 w-4 flex-shrink-0"
+              aria-hidden="true"
+            />
+            <span
+              className="font-medium"
+              aria-label={`${repository.forks} forks`}
+            >
+              {formatNumber(repository.forks)}
+            </span>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Description */}
       {repository.description && (
-        <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+        <p
+          className="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed"
+          aria-label="Repository description"
+        >
           {repository.description}
         </p>
       )}
@@ -136,79 +173,88 @@ export function RepositoryCard({
         <div className="mb-4">
           {/* Summary Loading State */}
           {summaryState?.isLoading && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent" />
-                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  Generating AI Summary...
-                </span>
+            <Alert
+              variant="info"
+              title="Generating AI Summary..."
+              className="mb-0"
+            >
+              <div className="flex items-center space-x-3 mt-2">
+                <Spinner size="sm" color="info" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-2 bg-info-200 dark:bg-info-800 rounded animate-pulse"></div>
+                  <div className="h-2 bg-info-200 dark:bg-info-800 rounded animate-pulse w-3/4"></div>
+                  <div className="h-2 bg-info-200 dark:bg-info-800 rounded animate-pulse w-1/2"></div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="h-3 bg-blue-200 dark:bg-blue-800 rounded animate-pulse"></div>
-                <div className="h-3 bg-blue-200 dark:bg-blue-800 rounded animate-pulse w-3/4"></div>
-                <div className="h-3 bg-blue-200 dark:bg-blue-800 rounded animate-pulse w-1/2"></div>
-              </div>
-            </div>
+            </Alert>
           )}
 
           {/* Summary Error State */}
           {summaryState?.error && !summaryState.isLoading && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <ExclamationTriangleIcon className="h-4 w-4 text-red-600 dark:text-red-400" />
-                  <span className="text-sm font-medium text-red-900 dark:text-red-100">
-                    Summary Generation Failed
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-red-800 dark:text-red-200 mb-3">
-                {summaryState.error}
-              </p>
-            </div>
+            <Alert
+              variant="error"
+              title="Summary Generation Failed"
+              className="mb-0"
+              data-testid={`summary-error-${repository.id}`}
+            >
+              {summaryState.error}
+            </Alert>
           )}
 
           {/* Summary Content */}
           {repository.summary &&
             !summaryState?.isLoading &&
             !summaryState?.error && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center space-x-2 mb-2">
-                  <EyeIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    AI Summary
-                  </span>
-                </div>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  {summaryExpanded || !shouldTruncateSummary(repository.summary)
-                    ? repository.summary
-                    : getTruncatedSummary(repository.summary)}
-                </p>
-                {shouldTruncateSummary(repository.summary) && (
-                  <button
-                    onClick={() => setSummaryExpanded(!summaryExpanded)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 mt-1 font-medium"
+              <Alert
+                variant="info"
+                title="AI Summary"
+                icon={<EyeIcon className="h-5 w-5" />}
+                className="mb-0"
+                data-testid={`summary-content-${repository.id}`}
+              >
+                <div role="region" aria-labelledby={`summary-${repository.id}`}>
+                  <p
+                    className="text-sm leading-relaxed"
+                    aria-describedby={`summary-${repository.id}`}
                   >
-                    {summaryExpanded ? 'Show less' : 'Show more'}
-                  </button>
-                )}
-              </div>
+                    {summaryExpanded ||
+                    !shouldTruncateSummary(repository.summary)
+                      ? repository.summary
+                      : getTruncatedSummary(repository.summary)}
+                  </p>
+                  {shouldTruncateSummary(repository.summary) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSummaryExpanded(!summaryExpanded)}
+                      className="mt-2 p-0 h-auto text-xs font-medium text-info-600 dark:text-info-400 hover:text-info-800 dark:hover:text-info-200"
+                      aria-expanded={summaryExpanded}
+                      aria-controls={`summary-content-${repository.id}`}
+                      aria-label={
+                        summaryExpanded
+                          ? 'Show less of the AI summary'
+                          : 'Show more of the AI summary'
+                      }
+                    >
+                      {summaryExpanded ? 'Show less' : 'Show more'}
+                    </Button>
+                  )}
+                </div>
+              </Alert>
             )}
 
           {/* No Summary Available */}
           {!repository.summary &&
             !summaryState?.isLoading &&
             !summaryState?.error && (
-              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <EyeIcon className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      AI Summary
-                    </span>
-                  </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-2 mb-2">
+                  <EyeIcon className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    AI Summary
+                  </span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   No AI summary available for this repository yet.
                 </p>
               </div>
@@ -217,26 +263,27 @@ export function RepositoryCard({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm space-y-2 sm:space-y-0 pt-2 border-t border-gray-100 dark:border-gray-700">
         <div className="flex items-center space-x-4">
           {repository.language && (
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-2">
               <div
-                className="w-3 h-3 rounded-full"
+                className="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-gray-200 dark:ring-gray-600"
                 style={{
                   backgroundColor: getLanguageColor(repository.language),
                 }}
+                aria-hidden="true"
               />
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-gray-600 dark:text-gray-400 font-medium">
                 {repository.language}
               </span>
             </div>
           )}
         </div>
-        <span className="text-gray-500 dark:text-gray-500">
+        <span className="text-gray-500 dark:text-gray-500 text-xs sm:text-sm font-medium">
           Trending {formatDate(repository.trending_date)}
         </span>
       </div>
-    </div>
+    </article>
   );
 }

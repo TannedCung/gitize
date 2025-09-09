@@ -1,108 +1,212 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { ThemeToggle } from '../ThemeToggle';
+import { ThemeProvider } from '../../../contexts/ThemeContext';
 
-// Mock the useTheme hook
-const mockSetTheme = jest.fn();
-const mockUseTheme = {
-  theme: 'system' as const,
-  setTheme: mockSetTheme,
-  resolvedTheme: 'light' as const,
+expect.extend(toHaveNoViolations);
+
+// Mock localStorage
+const mockLocalStorage = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
 };
 
-jest.mock('../../../contexts/ThemeContext', () => ({
-  ...jest.requireActual('../../../contexts/ThemeContext'),
-  useTheme: () => mockUseTheme,
-}));
+Object.defineProperty(window, 'localStorage', {
+  value: mockLocalStorage,
+});
+
+// Mock matchMedia
+const mockMatchMedia = jest.fn();
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: mockMatchMedia,
+});
 
 describe('ThemeToggle', () => {
   beforeEach(() => {
-    mockSetTheme.mockClear();
+    jest.clearAllMocks();
+    mockLocalStorage.getItem.mockReturnValue(null);
+
+    mockMatchMedia.mockImplementation(query => ({
+      matches: query === '(prefers-color-scheme: dark)' ? false : true,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
   });
 
   it('renders all theme options', () => {
-    render(<ThemeToggle />);
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
 
     expect(screen.getByTitle('Light')).toBeInTheDocument();
     expect(screen.getByTitle('Dark')).toBeInTheDocument();
-    expect(screen.getByTitle('System')).toBeInTheDocument();
+    expect(screen.getByTitle('System (light)')).toBeInTheDocument();
   });
 
   it('shows system theme as active by default', () => {
-    render(<ThemeToggle />);
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
 
-    const systemButton = screen.getByTitle('System');
-    expect(systemButton).toHaveClass(
-      'bg-white',
-      'dark:bg-gray-700',
-      'text-primary-600'
+    const systemButton = screen.getByTestId('theme-toggle-system');
+    expect(systemButton).toHaveClass('appflowy-border-glow');
+  });
+
+  it('changes theme when buttons are clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    const lightButton = screen.getByTestId('theme-toggle-light');
+    await user.click(lightButton);
+
+    expect(lightButton).toHaveClass('appflowy-border-glow');
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      'appflowy-theme',
+      'light'
     );
   });
 
-  it('calls setTheme when light theme is clicked', () => {
-    render(<ThemeToggle />);
-
-    const lightButton = screen.getByTitle('Light');
-    fireEvent.click(lightButton);
-
-    expect(mockSetTheme).toHaveBeenCalledWith('light');
-  });
-
-  it('calls setTheme when dark theme is clicked', () => {
-    render(<ThemeToggle />);
-
-    const darkButton = screen.getByTitle('Dark');
-    fireEvent.click(darkButton);
-
-    expect(mockSetTheme).toHaveBeenCalledWith('dark');
-  });
-
-  it('calls setTheme when system theme is clicked', () => {
-    render(<ThemeToggle />);
-
-    const systemButton = screen.getByTitle('System');
-    fireEvent.click(systemButton);
-
-    expect(mockSetTheme).toHaveBeenCalledWith('system');
-  });
-
-  it('shows light theme as active when selected', () => {
-    mockUseTheme.theme = 'light';
-
-    render(<ThemeToggle />);
-
-    const lightButton = screen.getByTitle('Light');
-    expect(lightButton).toHaveClass(
-      'bg-white',
-      'dark:bg-gray-700',
-      'text-primary-600'
+  it('shows system preference in tooltip for system theme', () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
     );
 
-    const darkButton = screen.getByTitle('Dark');
-    expect(darkButton).not.toHaveClass(
-      'bg-white',
-      'dark:bg-gray-700',
-      'text-primary-600'
-    );
+    const systemButton = screen.getByTestId('theme-toggle-system');
+    expect(systemButton).toHaveAttribute('title', 'System (light)');
   });
 
-  it('shows dark theme as active when selected', () => {
-    mockUseTheme.theme = 'dark';
+  it('disables buttons during theme transition', async () => {
+    const user = userEvent.setup();
 
-    render(<ThemeToggle />);
-
-    const darkButton = screen.getByTitle('Dark');
-    expect(darkButton).toHaveClass(
-      'bg-white',
-      'dark:bg-gray-700',
-      'text-primary-600'
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
     );
 
-    const lightButton = screen.getByTitle('Light');
-    expect(lightButton).not.toHaveClass(
-      'bg-white',
-      'dark:bg-gray-700',
-      'text-primary-600'
+    const lightButton = screen.getByTestId('theme-toggle-light');
+    await user.click(lightButton);
+
+    // During transition, buttons should be disabled
+    expect(lightButton).toBeDisabled();
+  });
+
+  it('shows labels when showLabels is true', () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle showLabels />
+      </ThemeProvider>
     );
+
+    expect(screen.getByText('Light')).toBeInTheDocument();
+    expect(screen.getByText('Dark')).toBeInTheDocument();
+    expect(screen.getByText(/System/)).toBeInTheDocument();
+  });
+
+  it('applies different sizes correctly', () => {
+    const { rerender } = render(
+      <ThemeProvider>
+        <ThemeToggle size="sm" />
+      </ThemeProvider>
+    );
+
+    let buttons = screen.getAllByRole('radio');
+    expect(buttons[0]).toHaveClass('p-1.5');
+
+    rerender(
+      <ThemeProvider>
+        <ThemeToggle size="lg" />
+      </ThemeProvider>
+    );
+
+    buttons = screen.getAllByRole('radio');
+    expect(buttons[0]).toHaveClass('p-2.5');
+  });
+
+  it('has proper accessibility attributes', () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    const container = screen.getByRole('radiogroup');
+    expect(container).toHaveAttribute('aria-label', 'Theme selection');
+
+    const buttons = screen.getAllByRole('radio');
+    buttons.forEach(button => {
+      expect(button).toHaveAttribute('aria-checked');
+      expect(button).toHaveAttribute('aria-label');
+    });
+  });
+
+  it('should not have accessibility violations', async () => {
+    const { container } = render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('responds to system preference changes', async () => {
+    let mediaQueryCallback: ((_e: MediaQueryListEvent) => void) | null = null;
+
+    mockMatchMedia.mockImplementation(query => ({
+      matches: query === '(prefers-color-scheme: dark)' ? false : true,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn((event, callback) => {
+        if (event === 'change') {
+          mediaQueryCallback = callback;
+        }
+      }),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    // Initially light system preference
+    expect(screen.getByTitle('System (light)')).toBeInTheDocument();
+
+    // Simulate system preference change to dark
+    if (mediaQueryCallback) {
+      fireEvent(window, new Event('change'));
+      mediaQueryCallback({ matches: true } as MediaQueryListEvent);
+    }
+
+    await waitFor(() => {
+      expect(screen.getByTitle('System (dark)')).toBeInTheDocument();
+    });
   });
 });

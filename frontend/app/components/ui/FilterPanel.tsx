@@ -95,22 +95,32 @@ export function FilterPanel({
   return (
     <div
       className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`}
+      role="region"
+      aria-labelledby="filters-heading"
     >
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3
+        id="filters-heading"
+        className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4"
+      >
         Filters
       </h3>
 
       <div className="space-y-4">
         {/* Language Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="language-filter"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             Language
           </label>
           <div className="relative">
             <select
+              id="language-filter"
               value={filters.language || 'All Languages'}
               onChange={e => handleLanguageChange(e.target.value)}
-              className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 touch-manipulation"
+              aria-describedby="language-filter-desc"
             >
               {POPULAR_LANGUAGES.map(language => (
                 <option key={language} value={language}>
@@ -118,17 +128,27 @@ export function FilterPanel({
                 </option>
               ))}
             </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDownIcon
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+              aria-hidden="true"
+            />
           </div>
+          <p id="language-filter-desc" className="sr-only">
+            Filter repositories by programming language
+          </p>
         </div>
 
         {/* Stars Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="stars-filter"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             Stars
           </label>
           <div className="relative">
             <select
+              id="stars-filter"
               value={getSelectedStarRange()}
               onChange={e => {
                 const range = STAR_RANGES.find(r => r.label === e.target.value);
@@ -136,7 +156,8 @@ export function FilterPanel({
                   handleStarRangeChange(range.min, range.max);
                 }
               }}
-              className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 touch-manipulation"
+              aria-describedby="stars-filter-desc"
             >
               {STAR_RANGES.map(range => (
                 <option key={range.label} value={range.label}>
@@ -144,17 +165,27 @@ export function FilterPanel({
                 </option>
               ))}
             </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDownIcon
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+              aria-hidden="true"
+            />
           </div>
+          <p id="stars-filter-desc" className="sr-only">
+            Filter repositories by minimum star count
+          </p>
         </div>
 
         {/* Date Range Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="date-filter"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             Time Range
           </label>
           <div className="relative">
             <select
+              id="date-filter"
               value={getSelectedDateRange()}
               onChange={e => {
                 const range = DATE_RANGES.find(r => r.label === e.target.value);
@@ -162,7 +193,8 @@ export function FilterPanel({
                   handleDateRangeChange(range.value);
                 }
               }}
-              className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 touch-manipulation"
+              aria-describedby="date-filter-desc"
             >
               {DATE_RANGES.map(range => (
                 <option key={range.value} value={range.label}>
@@ -170,14 +202,21 @@ export function FilterPanel({
                 </option>
               ))}
             </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <ChevronDownIcon
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+              aria-hidden="true"
+            />
           </div>
+          <p id="date-filter-desc" className="sr-only">
+            Filter repositories by trending time period
+          </p>
         </div>
 
         {/* Clear Filters */}
         <button
           onClick={() => onFiltersChange({})}
-          className="w-full text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-200 font-medium py-2"
+          className="w-full text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-200 font-medium py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded touch-manipulation tap-target"
+          aria-label="Clear all applied filters"
         >
           Clear all filters
         </button>
