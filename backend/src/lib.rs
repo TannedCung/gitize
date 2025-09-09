@@ -32,11 +32,11 @@ pub fn rocket() -> Rocket<Build> {
 fn services_stage() -> AdHoc {
     AdHoc::on_ignite("Services", |rocket| async {
         let db_pool = rocket
-            .state::<database::DbPool>()
+            .state::<Arc<database::DbPool>>()
             .expect("Database pool not found")
             .clone();
 
-        let service_manager = ServiceManager::new(Arc::new(db_pool))
+        let service_manager = ServiceManager::new(db_pool)
             .await
             .expect("Failed to initialize service manager");
 

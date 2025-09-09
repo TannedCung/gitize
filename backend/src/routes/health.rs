@@ -3,6 +3,7 @@ use crate::services::{Alert, ServiceManager};
 use rocket::{get, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 pub struct HealthResponse {
@@ -57,7 +58,7 @@ pub struct SchedulerMetrics {
 #[get("/health")]
 pub async fn health_check(
     service_manager: &State<ServiceManager>,
-    db_pool: &State<DbPool>,
+    db_pool: &State<Arc<DbPool>>,
 ) -> Json<HealthResponse> {
     let _start_time = std::time::Instant::now();
 
@@ -93,7 +94,7 @@ pub async fn health_check(
 #[get("/health/detailed")]
 pub async fn detailed_health_check(
     service_manager: &State<ServiceManager>,
-    db_pool: &State<DbPool>,
+    db_pool: &State<Arc<DbPool>>,
 ) -> Json<DetailedHealthResponse> {
     let _start_time = std::time::Instant::now();
 
@@ -159,7 +160,7 @@ pub async fn detailed_health_check(
     })
 }
 
-async fn check_database_health(db_pool: &DbPool) -> ComponentHealth {
+async fn check_database_health(db_pool: &Arc<DbPool>) -> ComponentHealth {
     let start_time = std::time::Instant::now();
 
     match db_pool.get() {
@@ -338,7 +339,7 @@ pub struct ResourceUsage {
 #[get("/health/diagnostics")]
 pub async fn system_diagnostics(
     service_manager: &State<ServiceManager>,
-    db_pool: &State<DbPool>,
+    db_pool: &State<Arc<DbPool>>,
 ) -> Json<SystemDiagnosticsResponse> {
     // Get system information
     let system_info = SystemInfo {

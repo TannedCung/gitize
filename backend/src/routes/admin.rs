@@ -7,6 +7,7 @@ use crate::services::{
 use rocket::serde::{json::Json, Serialize};
 use rocket::{delete, get, post, routes, Route, State};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Serialize)]
 pub struct TriggerJobResponse {
@@ -314,7 +315,7 @@ pub async fn cleanup_old_alerts(
 #[get("/admin/monitoring/dashboard")]
 pub async fn monitoring_dashboard(
     service_manager: &State<ServiceManager>,
-    _db_pool: &State<DbPool>,
+    _db_pool: &State<Arc<DbPool>>,
 ) -> Json<MonitoringDashboard> {
     // Get health summary
     let api_metrics = service_manager.metrics_collector.get_api_metrics().await;
