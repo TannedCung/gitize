@@ -39,7 +39,9 @@ function TestComponent() {
       <div data-testid="resolved-theme">{resolvedTheme}</div>
       <div data-testid="system-preference">{systemPreference}</div>
       <div data-testid="is-transitioning">{isTransitioning.toString()}</div>
-      <div data-testid="primary-color">{designTokens.colors.primary}</div>
+      <div data-testid="accent-blue">{designTokens.colors.accent.blue}</div>
+      <div data-testid="background-color">{designTokens.colors.background}</div>
+      <div data-testid="text-color">{designTokens.colors.text}</div>
       <button onClick={() => setTheme('light')} data-testid="set-light">
         Light
       </button>
@@ -86,7 +88,9 @@ describe('ThemeContext', () => {
     expect(screen.getByTestId('resolved-theme')).toHaveTextContent('light');
     expect(screen.getByTestId('system-preference')).toHaveTextContent('light');
     expect(screen.getByTestId('is-transitioning')).toHaveTextContent('false');
-    expect(screen.getByTestId('primary-color')).toHaveTextContent('#00B5FF');
+    expect(screen.getByTestId('accent-blue')).toHaveTextContent('#3B82F6');
+    expect(screen.getByTestId('background-color')).toHaveTextContent('#FFFFFF');
+    expect(screen.getByTestId('text-color')).toHaveTextContent('#171717');
   });
 
   it('should load saved theme from localStorage', () => {
@@ -177,14 +181,18 @@ describe('ThemeContext', () => {
       </ThemeProvider>
     );
 
-    // Initially light theme with skyline primary
-    expect(screen.getByTestId('primary-color')).toHaveTextContent('#00B5FF');
+    // Initially light theme with neutral colors
+    expect(screen.getByTestId('accent-blue')).toHaveTextContent('#3B82F6');
+    expect(screen.getByTestId('background-color')).toHaveTextContent('#FFFFFF');
 
     await user.click(screen.getByTestId('set-dark'));
 
-    // Dark theme should use aqua primary
+    // Dark theme should use brighter accent colors and inverted background
     await waitFor(() => {
-      expect(screen.getByTestId('primary-color')).toHaveTextContent('#00C8FF');
+      expect(screen.getByTestId('accent-blue')).toHaveTextContent('#60A5FA');
+      expect(screen.getByTestId('background-color')).toHaveTextContent(
+        '#000000'
+      );
     });
   });
 
@@ -286,21 +294,21 @@ describe('ThemeContext', () => {
 
     // Check initial CSS custom properties
     expect(
-      document.documentElement.style.getPropertyValue('--color-primary')
-    ).toBe('#00B5FF');
+      document.documentElement.style.getPropertyValue('--color-accent-blue')
+    ).toBe('#3B82F6');
     expect(
       document.documentElement.style.getPropertyValue('--color-background')
-    ).toBe('#ffffff');
+    ).toBe('#FFFFFF');
 
     await user.click(screen.getByTestId('set-dark'));
 
     await waitFor(() => {
       expect(
-        document.documentElement.style.getPropertyValue('--color-primary')
-      ).toBe('#00C8FF');
+        document.documentElement.style.getPropertyValue('--color-accent-blue')
+      ).toBe('#60A5FA');
       expect(
         document.documentElement.style.getPropertyValue('--color-background')
-      ).toBe('#0f172a');
+      ).toBe('#000000');
     });
   });
 

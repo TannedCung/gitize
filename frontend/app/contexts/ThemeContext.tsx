@@ -12,15 +12,37 @@ type Theme = 'light' | 'dark' | 'system';
 
 interface DesignTokens {
   colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
+    // Neutral color palette for flat minimalist design
+    neutral: {
+      white: string;
+      50: string;
+      100: string;
+      200: string;
+      300: string;
+      400: string;
+      500: string;
+      600: string;
+      700: string;
+      800: string;
+      900: string;
+      black: string;
+    };
+    // Soft accent colors for minimal visual impact
+    accent: {
+      blue: string;
+      green: string;
+      red: string;
+      amber: string;
+    };
+    // Semantic colors derived from neutral and accent palette
     background: string;
     surface: string;
     text: string;
     textSecondary: string;
+    textMuted: string;
     border: string;
-    shadow: string;
+    borderSubtle: string;
+    borderFocus: string;
   };
   spacing: {
     xs: string;
@@ -28,18 +50,19 @@ interface DesignTokens {
     md: string;
     lg: string;
     xl: string;
+    '2xl': string;
+    '3xl': string;
   };
   borderRadius: {
+    none: string;
     sm: string;
     md: string;
     lg: string;
     xl: string;
   };
+  // Removed shadows for flat design - only 'none' available
   shadows: {
-    sm: string;
-    md: string;
-    lg: string;
-    xl: string;
+    none: string;
   };
 }
 
@@ -55,15 +78,37 @@ interface ThemeContextType {
 
 const lightTokens: DesignTokens = {
   colors: {
-    primary: '#00B5FF', // skyline
-    secondary: '#9327FF', // violet
-    accent: '#E3006D', // berry
-    background: '#ffffff',
-    surface: '#f8fafc',
-    text: '#1e293b',
-    textSecondary: '#64748b',
-    border: '#e2e8f0',
-    shadow: 'rgba(0, 0, 0, 0.1)',
+    // Neutral color palette - light mode
+    neutral: {
+      white: '#FFFFFF',
+      50: '#FAFAFA',
+      100: '#F5F5F5',
+      200: '#E5E5E5',
+      300: '#D4D4D4',
+      400: '#A3A3A3',
+      500: '#737373',
+      600: '#525252',
+      700: '#404040',
+      800: '#262626',
+      900: '#171717',
+      black: '#000000',
+    },
+    // Soft accent colors for minimal visual impact
+    accent: {
+      blue: '#3B82F6',
+      green: '#059669', // Darker green for better contrast
+      red: '#EF4444',
+      amber: '#F59E0B',
+    },
+    // Semantic colors for light mode
+    background: '#FFFFFF',
+    surface: '#FAFAFA',
+    text: '#171717', // neutral-900
+    textSecondary: '#525252', // neutral-600
+    textMuted: '#A3A3A3', // neutral-400
+    border: '#E5E5E5', // neutral-200
+    borderSubtle: '#F5F5F5', // neutral-100
+    borderFocus: '#3B82F6', // accent-blue
   },
   spacing: {
     xs: '0.5rem',
@@ -71,32 +116,55 @@ const lightTokens: DesignTokens = {
     md: '1.5rem',
     lg: '2rem',
     xl: '3rem',
+    '2xl': '4rem',
+    '3xl': '6rem',
   },
   borderRadius: {
-    sm: '0.25rem',
-    md: '0.375rem',
-    lg: '0.5rem',
-    xl: '0.75rem',
+    none: '0',
+    sm: '0.125rem',
+    md: '0.25rem',
+    lg: '0.375rem',
+    xl: '0.5rem',
   },
+  // Flat design - no shadows
   shadows: {
-    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-    md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-    xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+    none: 'none',
   },
 };
 
 const darkTokens: DesignTokens = {
   colors: {
-    primary: '#00C8FF', // aqua
-    secondary: '#9327FF', // violet
-    accent: '#FB006D', // coral
-    background: '#0f172a',
-    surface: '#1e293b',
-    text: '#f1f5f9',
-    textSecondary: '#94a3b8',
-    border: '#334155',
-    shadow: 'rgba(0, 0, 0, 0.3)',
+    // Neutral color palette - dark mode (inverted)
+    neutral: {
+      white: '#000000', // Inverted for dark mode
+      50: '#171717',
+      100: '#262626',
+      200: '#404040',
+      300: '#525252',
+      400: '#737373',
+      500: '#A3A3A3',
+      600: '#D4D4D4',
+      700: '#E5E5E5',
+      800: '#F5F5F5',
+      900: '#FAFAFA',
+      black: '#FFFFFF', // Inverted for dark mode
+    },
+    // Soft accent colors - slightly brighter for dark mode
+    accent: {
+      blue: '#60A5FA', // Lighter blue for better contrast
+      green: '#34D399', // Lighter green for better contrast
+      red: '#F87171', // Lighter red for better contrast
+      amber: '#FBBF24', // Lighter amber for better contrast
+    },
+    // Semantic colors for dark mode
+    background: '#000000', // Pure black for flat dark mode
+    surface: '#171717', // neutral-50 (inverted)
+    text: '#FAFAFA', // neutral-900 (inverted)
+    textSecondary: '#D4D4D4', // neutral-600 (inverted)
+    textMuted: '#737373', // neutral-400 (same)
+    border: '#404040', // neutral-200 (inverted)
+    borderSubtle: '#262626', // neutral-100 (inverted)
+    borderFocus: '#60A5FA', // accent-blue (lighter)
   },
   spacing: {
     xs: '0.5rem',
@@ -104,18 +172,19 @@ const darkTokens: DesignTokens = {
     md: '1.5rem',
     lg: '2rem',
     xl: '3rem',
+    '2xl': '4rem',
+    '3xl': '6rem',
   },
   borderRadius: {
-    sm: '0.25rem',
-    md: '0.375rem',
-    lg: '0.5rem',
-    xl: '0.75rem',
+    none: '0',
+    sm: '0.125rem',
+    md: '0.25rem',
+    lg: '0.375rem',
+    xl: '0.5rem',
   },
+  // Flat design - no shadows
   shadows: {
-    sm: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
-    md: '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3)',
-    lg: '0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
-    xl: '0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3)',
+    none: 'none',
   },
 };
 
@@ -211,18 +280,43 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Set CSS custom properties for design tokens
     const setCustomProperties = (tokens: DesignTokens) => {
-      Object.entries(tokens.colors).forEach(([key, value]) => {
+      // Set neutral color palette
+      Object.entries(tokens.colors.neutral).forEach(([key, value]) => {
+        root.style.setProperty(`--color-neutral-${key}`, value);
+      });
+
+      // Set accent colors
+      Object.entries(tokens.colors.accent).forEach(([key, value]) => {
+        root.style.setProperty(`--color-accent-${key}`, value);
+      });
+
+      // Set semantic colors
+      const semanticColors = {
+        background: tokens.colors.background,
+        surface: tokens.colors.surface,
+        text: tokens.colors.text,
+        textSecondary: tokens.colors.textSecondary,
+        textMuted: tokens.colors.textMuted,
+        border: tokens.colors.border,
+        borderSubtle: tokens.colors.borderSubtle,
+        borderFocus: tokens.colors.borderFocus,
+      };
+
+      Object.entries(semanticColors).forEach(([key, value]) => {
         root.style.setProperty(`--color-${key}`, value);
       });
 
+      // Set spacing tokens
       Object.entries(tokens.spacing).forEach(([key, value]) => {
         root.style.setProperty(`--spacing-${key}`, value);
       });
 
+      // Set border radius tokens
       Object.entries(tokens.borderRadius).forEach(([key, value]) => {
         root.style.setProperty(`--border-radius-${key}`, value);
       });
 
+      // Set shadow tokens (only 'none' for flat design)
       Object.entries(tokens.shadows).forEach(([key, value]) => {
         root.style.setProperty(`--shadow-${key}`, value);
       });

@@ -416,3 +416,150 @@ export async function testComponentVariantsAccessibility<
 
   return results;
 }
+/**
+ * Import flat design accessibility utilities
+ */
+import {
+  auditFlatDesignAccessibility,
+  generateFlatDesignAccessibilityReport,
+  FlatDesignAccessibilityResult,
+} from './flatDesignAccessibility';
+
+/**
+ * Test flat design accessibility compliance
+ */
+export async function testFlatDesignAccessibility(
+  element: Element
+): Promise<FlatDesignAccessibilityResult> {
+  return auditFlatDesignAccessibility(element);
+}
+
+/**
+ * Test WCAG 2.1 AA compliance specifically for flat design
+ */
+export async function testWCAG21AAFlatDesign(
+  element: Element
+): Promise<AccessibilityTestResult> {
+  const flatDesignResult = await testFlatDesignAccessibility(element);
+  const axeResult = await runAccessibilityTests(element, {
+    tags: ['wcag21aa'],
+    wcag21aa: true,
+  });
+
+  // Combine results
+  const combinedViolations = [
+    ...axeResult.violations,
+    ...(!flatDesignResult.passed
+      ? [
+          {
+            id: 'flat-design-compliance',
+            impact: 'serious' as const,
+            description: 'Flat design accessibility compliance issues',
+            help: 'Ensure flat design meets WCAG 2.1 AA standards',
+            helpUrl: 'https://www.w3.org/WAI/WCAG21/Understanding/',
+            tags: ['wcag21aa', 'flat-design'],
+            nodes: [
+              {
+                html: element.outerHTML.substring(0, 100) + '...',
+                failureSummary:
+                  generateFlatDesignAccessibilityReport(flatDesignResult),
+              },
+            ],
+          },
+        ]
+      : []),
+  ];
+
+  return {
+    passed: axeResult.passed && flatDesignResult.passed,
+    violations: combinedViolations,
+    incomplete: axeResult.incomplete,
+    passes: axeResult.passes,
+    summary: {
+      ...axeResult.summary,
+      violationCount: combinedViolations.length,
+    },
+  };
+}
+
+/**
+ * Enhanced accessibility tests including flat design compliance
+ */
+export const enhancedAccessibilityTests = {
+  colorContrast: (container: HTMLElement) => testColorContrast(container),
+  keyboard: (container: HTMLElement) => testKeyboardAccessibility(container),
+  aria: (container: HTMLElement) => testAriaImplementation(container),
+  forms: (container: HTMLElement) => testFormAccessibility(container),
+  headings: (container: HTMLElement) => testHeadingStructure(container),
+  images: (container: HTMLElement) => testImageAccessibility(container),
+  links: (container: HTMLElement) => testLinkAccessibility(container),
+  flatDesign: (container: HTMLElement) =>
+    testFlatDesignAccessibility(container),
+  wcag21aaFlatDesign: (container: HTMLElement) =>
+    testWCAG21AAFlatDesign(container),
+};
+
+/**
+ * Comprehensive flat design accessibility audit
+ */
+export async function runComprehensiveFlatDesignAudit(
+  element: Element
+): Promise<{
+  axeResults: AccessibilityTestResult;
+  flatDesignResults: FlatDesignAccessibilityResult;
+  combinedReport: string;
+  passed: boolean;
+}> {
+  const axeResults = await runAccessibilityTests(element, {
+    tags: ['wcag21aa'],
+    wcag21aa: true,
+  });
+
+  const flatDesignResults = await testFlatDesignAccessibility(element);
+
+  const passed = axeResults.passed && flatDesignResults.passed;
+
+  let combinedReport = '# Comprehensive Flat Design Accessibility Audit\n\n';
+
+  // Overall status
+  combinedReport += `## Overall Status: ${passed ? '✅ PASSED' : '❌ FAILED'}\n\n`;
+
+  // Axe results summary
+  combinedReport += '## Standard WCAG 2.1 AA Compliance\n';
+  combinedReport += `- **Status**: ${axeResults.passed ? '✅ PASSED' : '❌ FAILED'}\n`;
+  combinedReport += `- **Violations**: ${axeResults.summary.violationCount}\n`;
+  combinedReport += `- **Passes**: ${axeResults.summary.passCount}\n\n`;
+
+  // Flat design results
+  combinedReport += generateFlatDesignAccessibilityReport(flatDesignResults);
+
+  // Recommendations
+  combinedReport += '## Implementation Recommendations\n\n';
+  combinedReport += '### For Flat Design Accessibility:\n';
+  combinedReport +=
+    '1. **Color Contrast**: Use neutral grays with sufficient contrast ratios\n';
+  combinedReport +=
+    '2. **Focus Indicators**: Implement minimal but visible focus rings\n';
+  combinedReport +=
+    '3. **Typography Hierarchy**: Rely on font size and weight for content organization\n';
+  combinedReport +=
+    '4. **Semantic Structure**: Maintain proper HTML semantics despite minimal styling\n';
+  combinedReport +=
+    '5. **Whitespace**: Use generous spacing for content organization\n\n';
+
+  if (axeResults.violations.length > 0) {
+    combinedReport += '### Standard WCAG Violations to Address:\n';
+    axeResults.violations.forEach((violation, index) => {
+      combinedReport += `${index + 1}. **${violation.description}**\n`;
+      combinedReport += `   - Impact: ${violation.impact}\n`;
+      combinedReport += `   - Help: ${violation.help}\n\n`;
+    });
+  }
+
+  return {
+    axeResults,
+    flatDesignResults,
+    combinedReport,
+    passed,
+  };
+}
