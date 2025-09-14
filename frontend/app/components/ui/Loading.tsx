@@ -55,18 +55,18 @@ export function Spinner({
 
   const colorClasses = {
     primary:
-      'border-primary-200 border-t-primary-500 dark:border-primary-800 dark:border-t-primary-400',
+      'border-gray-200 border-t-blue-500 dark:border-gray-700 dark:border-t-blue-400',
     secondary:
-      'border-secondary-200 border-t-secondary-500 dark:border-secondary-800 dark:border-t-secondary-400',
+      'border-gray-200 border-t-gray-500 dark:border-gray-700 dark:border-t-gray-400',
     accent:
-      'border-accent-200 border-t-accent-500 dark:border-accent-800 dark:border-t-accent-400',
+      'border-gray-200 border-t-green-500 dark:border-gray-700 dark:border-t-green-400',
     success:
-      'border-success-200 border-t-success-500 dark:border-success-800 dark:border-t-success-400',
+      'border-gray-200 border-t-green-500 dark:border-gray-700 dark:border-t-green-400',
     warning:
-      'border-warning-200 border-t-warning-500 dark:border-warning-800 dark:border-t-warning-400',
+      'border-gray-200 border-t-amber-500 dark:border-gray-700 dark:border-t-amber-400',
     error:
-      'border-error-200 border-t-error-500 dark:border-error-800 dark:border-t-error-400',
-    info: 'border-info-200 border-t-info-500 dark:border-info-800 dark:border-t-info-400',
+      'border-gray-200 border-t-red-500 dark:border-gray-700 dark:border-t-red-400',
+    info: 'border-gray-200 border-t-blue-500 dark:border-gray-700 dark:border-t-blue-400',
     neutral:
       'border-gray-200 border-t-gray-500 dark:border-gray-700 dark:border-t-gray-400',
   };
@@ -222,24 +222,24 @@ export function Progress({
   };
 
   const colorClasses = {
-    primary: 'bg-primary-500',
-    secondary: 'bg-secondary-500',
-    accent: 'bg-accent-500',
-    success: 'bg-success-500',
-    warning: 'bg-warning-500',
-    error: 'bg-error-500',
-    info: 'bg-info-500',
+    primary: 'bg-blue-500',
+    secondary: 'bg-gray-500',
+    accent: 'bg-green-500',
+    success: 'bg-green-500',
+    warning: 'bg-amber-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
     neutral: 'bg-gray-500',
   };
 
   const backgroundClasses = {
-    primary: 'bg-primary-100 dark:bg-primary-900',
-    secondary: 'bg-secondary-100 dark:bg-secondary-900',
-    accent: 'bg-accent-100 dark:bg-accent-900',
-    success: 'bg-success-100 dark:bg-success-900',
-    warning: 'bg-warning-100 dark:bg-warning-900',
-    error: 'bg-error-100 dark:bg-error-900',
-    info: 'bg-info-100 dark:bg-info-900',
+    primary: 'bg-gray-100 dark:bg-gray-800',
+    secondary: 'bg-gray-100 dark:bg-gray-800',
+    accent: 'bg-gray-100 dark:bg-gray-800',
+    success: 'bg-gray-100 dark:bg-gray-800',
+    warning: 'bg-gray-100 dark:bg-gray-800',
+    error: 'bg-gray-100 dark:bg-gray-800',
+    info: 'bg-gray-100 dark:bg-gray-800',
     neutral: 'bg-gray-100 dark:bg-gray-800',
   };
 

@@ -108,7 +108,7 @@ describe('NavigationBar', () => {
       const homeLinks = screen.getAllByText('Home');
       const homeLink = homeLinks[0].closest('a'); // Desktop version
       expect(homeLink).toHaveAttribute('aria-current', 'page');
-      expect(homeLink).toHaveClass('bg-primary-100', 'text-primary-900');
+      expect(homeLink).toHaveClass('text-gray-900', 'font-semibold');
     });
 
     it('does not apply active styling to inactive items', () => {

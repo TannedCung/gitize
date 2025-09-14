@@ -257,29 +257,17 @@ const useFocusManagement = (
  */
 const getArrowClasses = (position: PopoverPosition): string => {
   const baseArrow =
-    'absolute w-3 h-3 bg-white dark:bg-gray-800 border transform rotate-45';
+    'absolute w-3 h-3 bg-white dark:bg-gray-800 transform rotate-45';
 
   switch (position) {
     case 'top':
-      return cn(
-        baseArrow,
-        'bottom-[-6px] left-1/2 -translate-x-1/2 border-t-0 border-l-0 border-gray-200 dark:border-gray-700'
-      );
+      return cn(baseArrow, 'bottom-[-6px] left-1/2 -translate-x-1/2');
     case 'bottom':
-      return cn(
-        baseArrow,
-        'top-[-6px] left-1/2 -translate-x-1/2 border-b-0 border-r-0 border-gray-200 dark:border-gray-700'
-      );
+      return cn(baseArrow, 'top-[-6px] left-1/2 -translate-x-1/2');
     case 'left':
-      return cn(
-        baseArrow,
-        'right-[-6px] top-1/2 -translate-y-1/2 border-t-0 border-r-0 border-gray-200 dark:border-gray-700'
-      );
+      return cn(baseArrow, 'right-[-6px] top-1/2 -translate-y-1/2');
     case 'right':
-      return cn(
-        baseArrow,
-        'left-[-6px] top-1/2 -translate-y-1/2 border-b-0 border-l-0 border-gray-200 dark:border-gray-700'
-      );
+      return cn(baseArrow, 'left-[-6px] top-1/2 -translate-y-1/2');
     default:
       return baseArrow;
   }
@@ -320,10 +308,12 @@ const PopoverContent = forwardRef<
       aria-modal="false"
       tabIndex={-1}
       className={cn(
-        'absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg',
-        'dark:bg-gray-800 dark:border-gray-700',
+        'absolute z-50 bg-white rounded-lg',
+        'dark:bg-gray-800',
         'animate-scale-in',
         'focus:outline-none',
+        // Subtle border only when necessary for definition
+        'border border-gray-100 dark:border-gray-700/50',
         className
       )}
       style={style}
@@ -378,12 +368,15 @@ export const Popover = forwardRef<HTMLDivElement, PopoverProps>(
 
     // Use controlled or uncontrolled state
     const isOpen = open !== undefined ? open : internalOpen;
-    const setIsOpen = (newOpen: boolean) => {
-      if (open === undefined) {
-        setInternalOpen(newOpen);
-      }
-      onOpenChange?.(newOpen);
-    };
+    const setIsOpen = useCallback(
+      (newOpen: boolean) => {
+        if (open === undefined) {
+          setInternalOpen(newOpen);
+        }
+        onOpenChange?.(newOpen);
+      },
+      [open, onOpenChange]
+    );
 
     const { top, left, actualPosition } = usePopoverPosition(
       triggerRef,
@@ -451,7 +444,7 @@ export const Popover = forwardRef<HTMLDivElement, PopoverProps>(
       document.addEventListener('mousedown', handleClickOutside);
       return () =>
         document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen, closeOnClickOutside]);
+    }, [isOpen, closeOnClickOutside, setIsOpen]);
 
     // Cleanup timeouts on unmount
     useEffect(() => {

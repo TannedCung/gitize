@@ -323,7 +323,7 @@ describe('Menu', () => {
       const destructiveItem = screen
         .getByText('Destructive Item')
         .closest('[role="menuitem"]');
-      expect(destructiveItem).toHaveClass('text-red-600', 'hover:bg-red-50');
+      expect(destructiveItem).toHaveClass('text-red-600', 'hover:text-red-700');
     });
   });
 
@@ -586,7 +586,7 @@ describe('Menu', () => {
       );
 
       const menuItem = screen.getByText('Item 1').closest('[role="menuitem"]');
-      expect(menuItem).toHaveClass('px-3', 'py-1.5', 'text-sm');
+      expect(menuItem).toHaveClass('px-6', 'py-4', 'text-sm');
     });
 
     it('applies large size classes', () => {
@@ -600,7 +600,7 @@ describe('Menu', () => {
       );
 
       const menuItem = screen.getByText('Item 1').closest('[role="menuitem"]');
-      expect(menuItem).toHaveClass('px-5', 'py-3', 'text-base');
+      expect(menuItem).toHaveClass('px-10', 'py-6', 'text-base');
     });
   });
 

@@ -117,24 +117,26 @@ export function NewsletterSignup({
   return (
     <div
       className={cn(
-        'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700',
-        'rounded-xl p-6 shadow-sm',
+        // Flat design - no shadows, minimal styling
+        'bg-neutral-white dark:bg-neutral-900',
+        // Generous padding for airy layout
+        'p-8 sm:p-12',
         className
       )}
       data-testid={dataTestId}
       {...props}
     >
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+      <div className="mb-8">
+        <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-white mb-4 leading-tight">
           Stay Updated with Trending Repositories
         </h3>
-        <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+        <p className="text-neutral-600 dark:text-neutral-300 text-base leading-relaxed">
           Get a weekly digest of the top 5 trending repositories delivered to
           your inbox.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <TextField
           type="email"
           value={email}
@@ -148,7 +150,7 @@ export function NewsletterSignup({
         />
 
         {message && message.type === 'success' && (
-          <Alert variant="success" className="mb-4">
+          <Alert variant="success" className="mb-6">
             {message.text}
           </Alert>
         )}
@@ -165,7 +167,7 @@ export function NewsletterSignup({
         </Button>
       </form>
 
-      <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-6 text-sm text-neutral-500 dark:text-neutral-400">
         <p>
           We respect your privacy. Unsubscribe at any time by clicking the link
           in our emails.

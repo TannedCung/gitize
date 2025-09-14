@@ -25,15 +25,16 @@ export function LazyRepositoryCard({
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const currentRef = cardRef.current;
+    if (!currentRef) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasBeenVisible) {
           setIsVisible(true);
           setHasBeenVisible(true);
           // Once visible, we don't need to observe anymore
-          if (cardRef.current) {
-            observer.unobserve(cardRef.current);
-          }
+          observer.unobserve(currentRef);
         }
       },
       {
@@ -42,14 +43,10 @@ export function LazyRepositoryCard({
       }
     );
 
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
-    }
+    observer.observe(currentRef);
 
     return () => {
-      if (cardRef.current) {
-        observer.unobserve(cardRef.current);
-      }
+      observer.unobserve(currentRef);
     };
   }, [hasBeenVisible]);
 

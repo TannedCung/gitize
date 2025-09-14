@@ -3,6 +3,7 @@
 import React, { forwardRef, useState, useId } from 'react';
 import { BaseComponentProps, ComponentSize } from './types';
 import { cn } from './utils';
+// Removed unused imports: createFocusState, createHoverState
 
 /**
  * TextField validation states
@@ -75,19 +76,20 @@ export interface TextFieldProps extends Omit<BaseComponentProps, 'children'> {
 }
 
 /**
- * Get variant-specific classes for flat minimalist design
+ * Get variant-specific classes for flat minimalist design with subtle interaction feedback
  */
 const getVariantClasses = (
   variant: TextFieldVariant,
   state: TextFieldState,
   isFocused: boolean
 ): string => {
-  const baseClasses = 'text-neutral-900 dark:text-neutral-100 bg-transparent';
+  const baseClasses =
+    'text-neutral-900 dark:text-neutral-100 bg-transparent transition-colors duration-200 ease-in-out';
 
   if (state === 'disabled') {
     return cn(
       baseClasses,
-      'text-neutral-400 dark:text-neutral-600 cursor-not-allowed',
+      'text-neutral-400 dark:text-neutral-600 cursor-not-allowed opacity-50',
       variant === 'subtle-outline' &&
         'border border-neutral-200 dark:border-neutral-700'
     );
@@ -96,30 +98,36 @@ const getVariantClasses = (
   const variantClasses = {
     borderless: cn(
       baseClasses,
-      'border-0'
-      // Focus state - no visual change for pure borderless
+      'border-0',
+      // Subtle hover state for borderless inputs
+      'hover:bg-neutral-50/25 dark:hover:bg-neutral-900/25'
+      // Focus state - no visual change for pure borderless, handled by focus ring
     ),
     'bottom-line': cn(
       baseClasses,
-      'border-0 border-b',
+      'border-0 border-b transition-all duration-200 ease-in-out',
       // Default state - transparent bottom border
       'border-transparent',
-      // Focus state - show bottom line
+      // Hover state - subtle border hint
+      'hover:border-neutral-200 dark:hover:border-neutral-700',
+      // Focus state - show bottom line with accent color
       isFocused && 'border-accent-blue-500 dark:border-accent-blue-400',
-      // Error state
+      // Error state - minimal red accent
       state === 'error' && 'border-accent-red-500 dark:border-accent-red-400',
-      // Success state
+      // Success state - minimal green accent
       state === 'success' &&
         'border-accent-green-500 dark:border-accent-green-400'
     ),
     'subtle-outline': cn(
       baseClasses,
-      'border border-transparent',
-      // Focus state - subtle outline
-      isFocused && 'border-neutral-300 dark:border-neutral-600',
-      // Error state
+      'border border-transparent transition-all duration-200 ease-in-out',
+      // Hover state - subtle border appearance
+      'hover:border-neutral-200 dark:hover:border-neutral-700',
+      // Focus state - subtle outline with accent color
+      isFocused && 'border-accent-blue-300 dark:border-accent-blue-600',
+      // Error state - minimal red outline
       state === 'error' && 'border-accent-red-300 dark:border-accent-red-600',
-      // Success state
+      // Success state - minimal green outline
       state === 'success' &&
         'border-accent-green-300 dark:border-accent-green-600'
     ),
@@ -221,7 +229,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
     };
 
     const inputClasses = cn(
-      // Base styles for flat design
+      // Base styles for flat design with subtle interaction feedback
       'w-full bg-transparent outline-none',
       'placeholder:text-neutral-400 dark:placeholder:text-neutral-500',
       'transition-colors duration-200 ease-in-out',
@@ -231,7 +239,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         .split(' ')
         .filter(cls => cls.startsWith('text-')),
 
-      // Disabled state
+      // State-based styling with minimal visual changes
       {
         'cursor-not-allowed': disabled,
         'cursor-default': readOnly,
@@ -333,7 +341,12 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
             readOnly={readOnly}
             required={required}
             maxLength={maxLength}
-            className={inputClasses}
+            className={cn(
+              inputClasses,
+              // Enhanced focus state for accessibility with flat design
+              'focus:outline-none focus:ring-1 focus:ring-accent-blue-500 focus:ring-offset-0 rounded-sm',
+              'dark:focus:ring-accent-blue-400'
+            )}
             onChange={onChange}
             onFocus={handleFocus}
             onBlur={handleBlur}

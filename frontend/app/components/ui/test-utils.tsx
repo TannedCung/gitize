@@ -12,6 +12,9 @@ import {
   testHeadingStructure,
   testImageAccessibility,
   testLinkAccessibility,
+  testFlatDesignAccessibility,
+  testWCAG21AAFlatDesign,
+  runComprehensiveFlatDesignAudit,
   AccessibilityTestResult,
   AccessibilityTestOptions,
   accessibilityMatchers,
@@ -67,7 +70,7 @@ export async function testAccessibility(container: HTMLElement): Promise<void> {
 }
 
 /**
- * Comprehensive accessibility testing
+ * Comprehensive accessibility testing including flat design compliance
  */
 export async function testComprehensiveAccessibility(
   container: HTMLElement,
@@ -77,7 +80,28 @@ export async function testComprehensiveAccessibility(
 }
 
 /**
- * Test specific accessibility aspects
+ * Comprehensive flat design accessibility testing
+ */
+export async function testComprehensiveFlatDesignAccessibility(
+  container: HTMLElement
+): Promise<{
+  passed: boolean;
+  report: string;
+  axeResults: AccessibilityTestResult;
+  flatDesignResults: any;
+}> {
+  const results = await runComprehensiveFlatDesignAudit(container);
+
+  return {
+    passed: results.passed,
+    report: results.combinedReport,
+    axeResults: results.axeResults,
+    flatDesignResults: results.flatDesignResults,
+  };
+}
+
+/**
+ * Test specific accessibility aspects including flat design compliance
  */
 export const accessibilityTests = {
   colorContrast: (container: HTMLElement) => testColorContrast(container),
@@ -87,6 +111,10 @@ export const accessibilityTests = {
   headings: (container: HTMLElement) => testHeadingStructure(container),
   images: (container: HTMLElement) => testImageAccessibility(container),
   links: (container: HTMLElement) => testLinkAccessibility(container),
+  flatDesign: (container: HTMLElement) =>
+    testFlatDesignAccessibility(container),
+  wcag21aaFlatDesign: (container: HTMLElement) =>
+    testWCAG21AAFlatDesign(container),
 };
 
 /**

@@ -206,12 +206,12 @@ export const List = forwardRef<HTMLDivElement, ListProps>(
       return result;
     }, [items, filters, sortConfig]);
 
-    // Spacing classes
+    // Spacing classes - increased for spacious, airy design
     const spacingClasses = {
       none: 'space-y-0',
-      sm: 'space-y-1',
-      md: 'space-y-2',
-      lg: 'space-y-4',
+      sm: 'space-y-3', // Increased from space-y-1 to space-y-3 (12px)
+      md: 'space-y-6', // Increased from space-y-2 to space-y-6 (24px)
+      lg: 'space-y-8', // Increased from space-y-4 to space-y-8 (32px)
     };
 
     // Handle selection
@@ -383,14 +383,14 @@ export const List = forwardRef<HTMLDivElement, ListProps>(
       return (
         <div
           ref={ref}
-          className={cn('animate-pulse space-y-2', className)}
+          className={cn('animate-pulse space-y-6', className)}
           data-testid={dataTestId}
           {...props}
         >
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="h-12 bg-gray-200 rounded dark:bg-gray-700"
+              className="h-16 bg-neutral-200 rounded dark:bg-neutral-700"
             />
           ))}
         </div>
@@ -402,7 +402,7 @@ export const List = forwardRef<HTMLDivElement, ListProps>(
         <div
           ref={ref}
           className={cn(
-            'flex items-center justify-center py-12 text-gray-500 dark:text-gray-400',
+            'flex items-center justify-center py-24 text-neutral-500 dark:text-neutral-400',
             className
           )}
           data-testid={dataTestId}
@@ -444,16 +444,16 @@ export const List = forwardRef<HTMLDivElement, ListProps>(
               <div
                 key={item.id}
                 className={cn(
-                  'relative focus:outline-none',
+                  'relative focus:outline-none py-4 px-6',
                   keyboardNavigation &&
-                    'focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900',
+                    'focus:ring-2 focus:ring-accent-blue-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900',
                   selectable && 'cursor-pointer',
-                  isSelected && 'bg-primary-50 dark:bg-primary-900/20',
+                  isSelected && 'bg-accent-blue-50 dark:bg-accent-blue-900/20',
                   showDividers &&
                     index < processedItems.length - 1 &&
-                    'border-b border-gray-200 dark:border-gray-700',
+                    'border-b border-neutral-200 dark:border-neutral-700',
                   getItemClassName?.(item, index, isSelected),
-                  virtualized && 'mb-1'
+                  virtualized && 'mb-2'
                 )}
                 style={virtualized ? { height: `${itemHeight}px` } : {}}
                 role="option"

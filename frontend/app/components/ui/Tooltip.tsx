@@ -155,7 +155,7 @@ const useTooltipPosition = (
  */
 const getArrowClasses = (position: TooltipPosition): string => {
   const baseArrow =
-    'absolute w-2 h-2 bg-gray-900 dark:bg-gray-100 transform rotate-45';
+    'absolute w-2 h-2 bg-gray-800 dark:bg-gray-200 transform rotate-45';
 
   switch (position) {
     case 'top':
@@ -188,8 +188,8 @@ const TooltipContent = forwardRef<
     ref={ref}
     role="tooltip"
     className={cn(
-      'absolute z-50 px-2 py-1 text-sm font-medium text-white bg-gray-900 rounded-md shadow-lg',
-      'dark:text-gray-900 dark:bg-gray-100',
+      'absolute z-50 px-2 py-1 text-sm font-medium text-white bg-gray-800 rounded-md',
+      'dark:text-gray-800 dark:bg-gray-200',
       'animate-fade-in',
       'max-w-xs break-words',
       className
@@ -244,7 +244,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
     );
 
     // Show tooltip logic
-    const showTooltip = () => {
+    const showTooltip = useCallback(() => {
       if (disabled) return;
 
       if (hideTimeoutRef.current) {
@@ -257,10 +257,10 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
           setIsVisible(true);
         }, showDelay);
       }
-    };
+    }, [disabled, isVisible, showDelay]);
 
     // Hide tooltip logic
-    const hideTooltip = () => {
+    const hideTooltip = useCallback(() => {
       if (showTimeoutRef.current) {
         clearTimeout(showTimeoutRef.current);
         showTimeoutRef.current = undefined;
@@ -271,7 +271,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
           setIsVisible(false);
         }, hideDelay);
       }
-    };
+    }, [isVisible, hideDelay]);
 
     // Update visibility based on hover and focus states
     useEffect(() => {
@@ -280,7 +280,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
       } else {
         hideTooltip();
       }
-    }, [isHovered, isFocused]);
+    }, [isHovered, isFocused, showTooltip, hideTooltip]);
 
     // Cleanup timeouts on unmount
     useEffect(() => {

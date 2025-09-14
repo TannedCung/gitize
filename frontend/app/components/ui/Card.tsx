@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { BaseComponentProps } from './types';
 import { cn } from './utils';
+// Removed unused import: createCompleteInteractionStates
 
 // Card Root Component
 export interface CardProps extends BaseComponentProps {
@@ -28,14 +29,27 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const variantClasses = {
       default:
-        'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700',
-      outlined: 'bg-transparent border-2 border-gray-300 dark:border-gray-600',
+        'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700',
+      outlined:
+        'bg-transparent border border-neutral-300 dark:border-neutral-600',
       elevated:
-        'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700',
+        'bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700',
     };
 
     const interactiveClasses = interactive
-      ? 'cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
+      ? cn(
+          'cursor-pointer transition-colors duration-200 ease-in-out',
+          // Subtle hover state - light background and border changes only
+          'hover:bg-neutral-50/50 dark:hover:bg-neutral-900/25',
+          'hover:border-neutral-300 dark:hover:border-neutral-600',
+          // Minimal focus state for accessibility
+          'focus:outline-none focus:ring-1 focus:ring-accent-blue-500 focus:ring-offset-2',
+          'dark:focus:ring-offset-neutral-900',
+          // Enhanced focus visibility for keyboard navigation
+          'focus-visible:ring-2',
+          // Subtle active state
+          'active:bg-neutral-100/50 dark:active:bg-neutral-800/50'
+        )
       : '';
 
     return (
@@ -82,8 +96,8 @@ export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
       <div
         ref={ref}
         className={cn(
-          'px-6 py-4',
-          divider && 'border-b border-gray-200 dark:border-gray-700',
+          'px-8 py-6',
+          divider && 'border-b border-neutral-200 dark:border-neutral-700',
           className
         )}
         {...props}
@@ -106,9 +120,9 @@ export const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, children, padding = 'md', ...props }, ref) => {
     const paddingClasses = {
       none: '',
-      sm: 'px-4 py-3',
-      md: 'px-6 py-4',
-      lg: 'px-8 py-6',
+      sm: 'px-6 py-4',
+      md: 'px-8 py-6',
+      lg: 'px-10 py-8',
     };
 
     return (
@@ -149,9 +163,9 @@ export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
       <div
         ref={ref}
         className={cn(
-          'px-6 py-4 flex items-center',
+          'px-8 py-6 flex items-center',
           alignClasses[align],
-          divider && 'border-t border-gray-200 dark:border-gray-700',
+          divider && 'border-t border-neutral-200 dark:border-neutral-700',
           className
         )}
         {...props}
@@ -175,7 +189,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
     const headingProps = {
       ref,
       className: cn(
-        'text-lg font-semibold text-gray-900 dark:text-gray-100',
+        'text-lg font-semibold text-neutral-900 dark:text-neutral-100 leading-relaxed',
         className
       ),
       ...props,
@@ -213,7 +227,10 @@ export const CardDescription = forwardRef<
   return (
     <p
       ref={ref}
-      className={cn('text-sm text-gray-600 dark:text-gray-400 mt-1', className)}
+      className={cn(
+        'text-sm text-neutral-600 dark:text-neutral-400 mt-2 leading-relaxed',
+        className
+      )}
       {...props}
     >
       {children}

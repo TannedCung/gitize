@@ -194,13 +194,13 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
       return result;
     }, [data, filters, sortConfig]);
 
-    // Gap classes
+    // Gap classes - increased for spacious, airy design
     const gapClasses = {
       none: 'gap-0',
-      sm: 'gap-2',
-      md: 'gap-4',
-      lg: 'gap-6',
-      xl: 'gap-8',
+      sm: 'gap-4', // Increased from gap-2 to gap-4 (16px)
+      md: 'gap-8', // Increased from gap-4 to gap-8 (32px)
+      lg: 'gap-12', // Increased from gap-6 to gap-12 (48px)
+      xl: 'gap-16', // Increased from gap-8 to gap-16 (64px)
     };
 
     // Handle selection
@@ -299,7 +299,7 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
       return (
         <div
           ref={ref}
-          className={cn('animate-pulse space-y-4', className)}
+          className={cn('animate-pulse space-y-8', className)}
           data-testid={dataTestId}
           {...props}
         >
@@ -308,7 +308,7 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
               {columns.map((_, index) => (
                 <div
                   key={index}
-                  className="h-6 bg-gray-200 rounded dark:bg-gray-700"
+                  className="h-8 bg-neutral-200 rounded dark:bg-neutral-700"
                 />
               ))}
             </div>
@@ -322,7 +322,7 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
               {columns.map((_, colIndex) => (
                 <div
                   key={colIndex}
-                  className="h-8 bg-gray-200 rounded dark:bg-gray-700"
+                  className="h-12 bg-neutral-200 rounded dark:bg-neutral-700"
                 />
               ))}
             </div>
@@ -336,7 +336,7 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
         <div
           ref={ref}
           className={cn(
-            'flex items-center justify-center py-12 text-gray-500 dark:text-gray-400',
+            'flex items-center justify-center py-24 text-neutral-500 dark:text-neutral-400',
             className
           )}
           data-testid={dataTestId}
@@ -359,7 +359,7 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
         {showHeaders && (
           <div
             className={cn(
-              'grid border-b border-gray-200 dark:border-gray-700 pb-2 mb-4',
+              'grid border-b border-neutral-200 dark:border-neutral-700 pb-6 mb-8',
               gapClasses[gap]
             )}
             style={{ gridTemplateColumns }}
@@ -412,16 +412,16 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
         )}
 
         {/* Data rows */}
-        <div className={cn('space-y-2')}>
+        <div className={cn('space-y-6')}>
           {processedData.map((item, index) => (
             <div
               key={item.id}
               className={cn(
-                'grid items-center py-2 px-3 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 dark:hover:border-gray-700 dark:hover:bg-gray-800/50 transition-colors',
+                'grid items-center py-6 px-6 rounded-lg border border-transparent hover:border-neutral-200 hover:bg-neutral-50 dark:hover:border-neutral-700 dark:hover:bg-neutral-800/50 transition-colors',
                 selectedIds.has(item.id) &&
-                  'bg-primary-50 border-primary-200 dark:bg-primary-900/20 dark:border-primary-800',
+                  'bg-accent-blue-50 border-accent-blue-200 dark:bg-accent-blue-900/20 dark:border-accent-blue-800',
                 keyboardNavigation &&
-                  'focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-gray-900',
+                  'focus-within:ring-2 focus-within:ring-accent-blue-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-neutral-900',
                 getRowClassName?.(item, index),
                 gapClasses[gap]
               )}
@@ -446,7 +446,7 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
                 <div
                   key={column.key}
                   className={cn(
-                    'text-gray-900 dark:text-gray-100 truncate',
+                    'text-neutral-900 dark:text-neutral-100 leading-relaxed',
                     column.className
                   )}
                   role="gridcell"

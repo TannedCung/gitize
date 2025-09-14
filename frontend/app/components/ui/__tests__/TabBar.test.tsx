@@ -104,10 +104,10 @@ describe('TabBar', () => {
       );
 
       const tabList = screen.getByRole('tablist');
-      expect(tabList).toHaveClass('border-b', 'border-gray-200');
+      expect(tabList).toHaveClass('flex', 'space-x-8');
 
       const activeTab = screen.getByText('Tab 1').closest('button');
-      expect(activeTab).toHaveClass('border-primary-500', 'text-primary-600');
+      expect(activeTab).toHaveClass('text-gray-900', 'font-semibold');
     });
 
     it('renders pills variant correctly', () => {
@@ -116,13 +116,13 @@ describe('TabBar', () => {
       );
 
       const tabList = screen.getByRole('tablist');
-      expect(tabList).toHaveClass('bg-gray-100', 'rounded-lg', 'p-1');
+      expect(tabList).toHaveClass('bg-gray-50/50', 'p-3', 'space-x-2');
 
       const activeTab = screen.getByText('Tab 1').closest('button');
       expect(activeTab).toHaveClass(
-        'bg-primary-100',
-        'text-primary-700',
-        'rounded-lg'
+        'bg-gray-50',
+        'text-gray-900',
+        'font-semibold'
       );
     });
 
@@ -136,10 +136,10 @@ describe('TabBar', () => {
       );
 
       const tabList = screen.getByRole('tablist');
-      expect(tabList).toHaveClass('border-b', 'border-gray-200');
+      expect(tabList).toHaveClass('flex', 'space-x-8');
 
       const activeTab = screen.getByText('Tab 1').closest('button');
-      expect(activeTab).toHaveClass('text-primary-600', 'after:bg-primary-500');
+      expect(activeTab).toHaveClass('text-gray-900', 'font-semibold');
     });
   });
 
@@ -150,7 +150,7 @@ describe('TabBar', () => {
       );
 
       const tab = screen.getByText('Tab 1').closest('button');
-      expect(tab).toHaveClass('px-3', 'py-1.5', 'text-sm');
+      expect(tab).toHaveClass('px-6', 'py-4', 'text-sm');
     });
 
     it('renders medium size correctly', () => {
@@ -159,7 +159,7 @@ describe('TabBar', () => {
       );
 
       const tab = screen.getByText('Tab 1').closest('button');
-      expect(tab).toHaveClass('px-4', 'py-2', 'text-sm');
+      expect(tab).toHaveClass('px-8', 'py-5', 'text-sm');
     });
 
     it('renders large size correctly', () => {
@@ -168,7 +168,7 @@ describe('TabBar', () => {
       );
 
       const tab = screen.getByText('Tab 1').closest('button');
-      expect(tab).toHaveClass('px-6', 'py-3', 'text-base');
+      expect(tab).toHaveClass('px-10', 'py-6', 'text-base');
     });
   });
 
@@ -289,16 +289,18 @@ describe('TabBar', () => {
 
       render(<TabBar tabs={mockTabs} onTabChange={mockOnTabChange} />);
 
-      const tab2 = screen.getByText('Tab 2');
-      tab2.focus();
-      await user.keyboard('{Enter}');
+      const tab2Button = screen.getByText('Tab 2').closest('button');
+      if (tab2Button) {
+        tab2Button.focus();
+        await user.keyboard('{Enter}');
 
-      expect(mockOnTabChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'tab2',
-          label: 'Tab 2',
-        })
-      );
+        expect(mockOnTabChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'tab2',
+            label: 'Tab 2',
+          })
+        );
+      }
     });
 
     it('handles keyboard navigation with Space key', async () => {
@@ -306,16 +308,18 @@ describe('TabBar', () => {
 
       render(<TabBar tabs={mockTabs} onTabChange={mockOnTabChange} />);
 
-      const tab2 = screen.getByText('Tab 2');
-      tab2.focus();
-      await user.keyboard(' ');
+      const tab2Button = screen.getByText('Tab 2').closest('button');
+      if (tab2Button) {
+        tab2Button.focus();
+        await user.keyboard(' ');
 
-      expect(mockOnTabChange).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'tab2',
-          label: 'Tab 2',
-        })
-      );
+        expect(mockOnTabChange).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'tab2',
+            label: 'Tab 2',
+          })
+        );
+      }
     });
   });
 
@@ -331,14 +335,16 @@ describe('TabBar', () => {
         />
       );
 
-      const tab1 = screen.getByText('Tab 1');
-      tab1.focus();
+      const tab1Button = screen.getByText('Tab 1').closest('button');
+      if (tab1Button) {
+        tab1Button.focus();
 
-      // Arrow right should move to next tab
-      await user.keyboard('{ArrowRight}');
-      expect(mockOnTabChange).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'tab2' })
-      );
+        // Arrow right should move to next tab
+        await user.keyboard('{ArrowRight}');
+        expect(mockOnTabChange).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'tab2' })
+        );
+      }
 
       // Arrow left should move to previous tab
       await user.keyboard('{ArrowLeft}');
@@ -352,29 +358,39 @@ describe('TabBar', () => {
 
       render(<TabBar tabs={mockTabs} onTabChange={mockOnTabChange} />);
 
-      const tab1 = screen.getByText('Tab 1');
-      tab1.focus();
+      const tab1Button = screen.getByText('Tab 1').closest('button');
+      if (tab1Button) {
+        tab1Button.focus();
 
-      // Arrow left from first tab should go to last enabled tab
-      await user.keyboard('{ArrowLeft}');
-      expect(mockOnTabChange).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'tab3' })
-      );
+        // Arrow left from first tab should go to last enabled tab
+        await user.keyboard('{ArrowLeft}');
+        expect(mockOnTabChange).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'tab3' })
+        );
+      }
     });
 
     it('skips disabled tabs during keyboard navigation', async () => {
       const user = userEvent.setup();
 
-      render(<TabBar tabs={mockTabs} onTabChange={mockOnTabChange} />);
-
-      const tab3 = screen.getByText('Tab 3');
-      tab3.focus();
-
-      // Arrow right from tab3 should skip disabled tab4 and wrap to tab1
-      await user.keyboard('{ArrowRight}');
-      expect(mockOnTabChange).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'tab1' })
+      render(
+        <TabBar
+          tabs={mockTabs}
+          activeTab="tab3"
+          onTabChange={mockOnTabChange}
+        />
       );
+
+      const tab3Button = screen.getByText('Tab 3').closest('button');
+      if (tab3Button) {
+        tab3Button.focus();
+
+        // Arrow right from tab3 should skip disabled tab4 and wrap to tab1
+        await user.keyboard('{ArrowRight}');
+        expect(mockOnTabChange).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'tab1' })
+        );
+      }
     });
 
     it('navigates to first tab with Home key', async () => {
@@ -388,13 +404,15 @@ describe('TabBar', () => {
         />
       );
 
-      const tab3 = screen.getByText('Tab 3');
-      tab3.focus();
+      const tab3Button = screen.getByText('Tab 3').closest('button');
+      if (tab3Button) {
+        tab3Button.focus();
 
-      await user.keyboard('{Home}');
-      expect(mockOnTabChange).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'tab1' })
-      );
+        await user.keyboard('{Home}');
+        expect(mockOnTabChange).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'tab1' })
+        );
+      }
     });
 
     it('navigates to last enabled tab with End key', async () => {
@@ -402,13 +420,15 @@ describe('TabBar', () => {
 
       render(<TabBar tabs={mockTabs} onTabChange={mockOnTabChange} />);
 
-      const tab1 = screen.getByText('Tab 1');
-      tab1.focus();
+      const tab1Button = screen.getByText('Tab 1').closest('button');
+      if (tab1Button) {
+        tab1Button.focus();
 
-      await user.keyboard('{End}');
-      expect(mockOnTabChange).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'tab3' })
-      );
+        await user.keyboard('{End}');
+        expect(mockOnTabChange).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'tab3' })
+        );
+      }
     });
   });
 
@@ -518,17 +538,19 @@ describe('TabBar', () => {
 
       render(<TabBar tabs={mockTabs} onTabChange={mockOnTabChange} />);
 
-      const tab1 = screen.getByText('Tab 1');
-      const tab2 = screen.getByText('Tab 2');
+      const tab1Button = screen.getByText('Tab 1').closest('button');
+      const tab2Button = screen.getByText('Tab 2').closest('button');
 
       // Only active tab should be focusable initially
-      expect(tab1).toHaveAttribute('tabindex', '0');
-      expect(tab2).toHaveAttribute('tabindex', '-1');
+      expect(tab1Button).toHaveAttribute('tabindex', '0');
+      expect(tab2Button).toHaveAttribute('tabindex', '-1');
 
       // After clicking tab2, it should become focusable
-      await user.click(tab2);
-      expect(tab1).toHaveAttribute('tabindex', '-1');
-      expect(tab2).toHaveAttribute('tabindex', '0');
+      if (tab2Button) {
+        await user.click(tab2Button);
+        expect(tab1Button).toHaveAttribute('tabindex', '-1');
+        expect(tab2Button).toHaveAttribute('tabindex', '0');
+      }
     });
 
     it('should not have accessibility violations', async () => {

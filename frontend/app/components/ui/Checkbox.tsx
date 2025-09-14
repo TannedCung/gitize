@@ -1,6 +1,7 @@
 import React, { forwardRef, useId } from 'react';
 import { BaseComponentProps } from './types';
 import { cn } from './utils';
+// Removed unused import: createCompleteInteractionStates
 
 /**
  * Checkbox component props
@@ -177,55 +178,64 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       onChange?.(event.target.checked, event);
     };
 
-    // Base checkbox styles
+    // Base checkbox styles - flat design with subtle interaction feedback
     const checkboxClasses = cn(
-      // Base styles
-      'relative flex-shrink-0 rounded border-2 transition-all duration-200 ease-in-out',
-      'focus:outline-none focus:ring-2 focus:ring-offset-2',
+      // Base styles - flat square with no shadows or 3D effects
+      'relative flex-shrink-0 transition-all duration-200 ease-in-out',
+      'focus:outline-none',
 
       // Size classes
       sizeClasses.checkbox,
 
-      // State-based styles
+      // State-based styles with enhanced interaction feedback
       {
-        // Default state
-        'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800':
+        // Default state - flat with subtle border
+        'border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900':
           !checked && !indeterminate && !hasError,
 
-        // Checked/indeterminate state
-        'border-primary-500 bg-primary-500 dark:border-primary-600 dark:bg-primary-600':
+        // Checked/indeterminate state - flat with minimal accent
+        'border border-neutral-900 bg-neutral-900 dark:border-neutral-100 dark:bg-neutral-100':
           (checked || indeterminate) && !hasError,
 
-        // Error state
-        'border-error-500 bg-white dark:border-error-500 dark:bg-gray-800':
+        // Error state - flat with minimal red accent
+        'border border-accent-red-200 bg-white dark:border-accent-red-700 dark:bg-neutral-900':
           !checked && !indeterminate && hasError,
-        'border-error-500 bg-error-500 dark:border-error-600 dark:bg-error-600':
+        'border border-accent-red-500 bg-accent-red-500 dark:border-accent-red-400 dark:bg-accent-red-400':
           (checked || indeterminate) && hasError,
 
-        // Hover states
-        'hover:border-gray-400 dark:hover:border-gray-500':
+        // Enhanced hover states - subtle background changes only
+        'hover:bg-neutral-50 hover:border-neutral-300 dark:hover:bg-neutral-800 dark:hover:border-neutral-600':
           !disabled && !checked && !indeterminate && !hasError,
-        'hover:border-primary-600 hover:bg-primary-600 dark:hover:border-primary-700 dark:hover:bg-primary-700':
+        'hover:bg-neutral-800 hover:border-neutral-800 dark:hover:bg-neutral-200 dark:hover:border-neutral-200':
           !disabled && (checked || indeterminate) && !hasError,
-        'hover:border-error-600 hover:bg-error-600 dark:hover:border-error-700 dark:hover:bg-error-700':
+        'hover:bg-accent-red-50 hover:border-accent-red-300 dark:hover:bg-accent-red-900/20 dark:hover:border-accent-red-600':
+          !disabled && !checked && !indeterminate && hasError,
+        'hover:bg-accent-red-600 hover:border-accent-red-600 dark:hover:bg-accent-red-300 dark:hover:border-accent-red-300':
           !disabled && (checked || indeterminate) && hasError,
 
-        // Disabled state
+        // Disabled state with consistent opacity
         'opacity-50 cursor-not-allowed': disabled,
         'cursor-pointer': !disabled,
 
-        // Focus ring colors
-        'focus:ring-primary-500 dark:focus:ring-primary-600': !hasError,
-        'focus:ring-error-500 dark:focus:ring-error-600': hasError,
+        // Enhanced focus ring - minimal outline with better visibility
+        'focus:ring-1 focus:ring-neutral-400 focus:ring-offset-1 dark:focus:ring-neutral-500 dark:focus:ring-offset-neutral-900':
+          !hasError,
+        'focus:ring-1 focus:ring-accent-red-400 focus:ring-offset-1 dark:focus:ring-accent-red-500 dark:focus:ring-offset-neutral-900':
+          hasError,
+        // Enhanced focus visibility for keyboard navigation
+        'focus-visible:ring-2': true,
       }
     );
 
-    // Icon styles
+    // Icon styles - minimal checkmark with enhanced contrast
     const iconClasses = cn(
-      'absolute inset-0 flex items-center justify-center text-white transition-opacity duration-200',
+      'absolute inset-0 flex items-center justify-center transition-opacity duration-200',
       sizeClasses.icon,
       {
-        'opacity-100': checked || indeterminate,
+        'opacity-100 text-neutral-white dark:text-neutral-900':
+          (checked || indeterminate) && !hasError,
+        'opacity-100 text-neutral-white':
+          (checked || indeterminate) && hasError,
         'opacity-0': !checked && !indeterminate,
       }
     );

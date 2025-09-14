@@ -115,20 +115,17 @@ const CloseIcon = (
 const getVariantClasses = (variant: AlertVariant): string => {
   const variants = {
     success: cn(
-      'bg-success-50 border-success-200 text-success-800',
-      'dark:bg-success-900/20 dark:border-success-800 dark:text-success-200'
+      'bg-green-50 text-green-800',
+      'dark:bg-green-900/10 dark:text-green-200'
     ),
     warning: cn(
-      'bg-warning-50 border-warning-200 text-warning-800',
-      'dark:bg-warning-900/20 dark:border-warning-800 dark:text-warning-200'
+      'bg-amber-50 text-amber-800',
+      'dark:bg-amber-900/10 dark:text-amber-200'
     ),
-    error: cn(
-      'bg-error-50 border-error-200 text-error-800',
-      'dark:bg-error-900/20 dark:border-error-800 dark:text-error-200'
-    ),
+    error: cn('bg-red-50 text-red-800', 'dark:bg-red-900/10 dark:text-red-200'),
     info: cn(
-      'bg-info-50 border-info-200 text-info-800',
-      'dark:bg-info-900/20 dark:border-info-800 dark:text-info-200'
+      'bg-blue-50 text-blue-800',
+      'dark:bg-blue-900/10 dark:text-blue-200'
     ),
   };
 
@@ -140,10 +137,10 @@ const getVariantClasses = (variant: AlertVariant): string => {
  */
 const getIconClasses = (variant: AlertVariant): string => {
   const iconColors = {
-    success: 'text-success-600 dark:text-success-400',
-    warning: 'text-warning-600 dark:text-warning-400',
-    error: 'text-error-600 dark:text-error-400',
-    info: 'text-info-600 dark:text-info-400',
+    success: 'text-green-600 dark:text-green-400',
+    warning: 'text-amber-600 dark:text-amber-400',
+    error: 'text-red-600 dark:text-red-400',
+    info: 'text-blue-600 dark:text-blue-400',
   };
 
   return iconColors[variant];
@@ -155,20 +152,20 @@ const getIconClasses = (variant: AlertVariant): string => {
 const getCloseButtonClasses = (variant: AlertVariant): string => {
   const closeButtonColors = {
     success: cn(
-      'text-success-600 hover:text-success-800 hover:bg-success-100',
-      'dark:text-success-400 dark:hover:text-success-200 dark:hover:bg-success-800/30'
+      'text-green-600 hover:text-green-800 hover:bg-green-100',
+      'dark:text-green-400 dark:hover:text-green-200 dark:hover:bg-green-800/20'
     ),
     warning: cn(
-      'text-warning-600 hover:text-warning-800 hover:bg-warning-100',
-      'dark:text-warning-400 dark:hover:text-warning-200 dark:hover:bg-warning-800/30'
+      'text-amber-600 hover:text-amber-800 hover:bg-amber-100',
+      'dark:text-amber-400 dark:hover:text-amber-200 dark:hover:bg-amber-800/20'
     ),
     error: cn(
-      'text-error-600 hover:text-error-800 hover:bg-error-100',
-      'dark:text-error-400 dark:hover:text-error-200 dark:hover:bg-error-800/30'
+      'text-red-600 hover:text-red-800 hover:bg-red-100',
+      'dark:text-red-400 dark:hover:text-red-200 dark:hover:bg-red-800/20'
     ),
     info: cn(
-      'text-info-600 hover:text-info-800 hover:bg-info-100',
-      'dark:text-info-400 dark:hover:text-info-200 dark:hover:bg-info-800/30'
+      'text-blue-600 hover:text-blue-800 hover:bg-blue-100',
+      'dark:text-blue-400 dark:hover:text-blue-200 dark:hover:bg-blue-800/20'
     ),
   };
 
@@ -227,8 +224,8 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(
         aria-label={ariaLabel}
         data-testid={testId}
         className={cn(
-          // Base styles
-          'relative rounded-lg border p-4',
+          // Base styles - flat design with no borders
+          'relative rounded-lg p-4',
           'transition-all duration-200 ease-in-out',
 
           // Variant styles

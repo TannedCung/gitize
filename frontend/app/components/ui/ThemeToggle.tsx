@@ -100,9 +100,8 @@ export function ThemeToggle({
             style={{
               ...(isActive && {
                 backgroundColor: colors.background,
-                color: colors.primary,
-                borderColor: `${colors.primary}33`,
-                boxShadow: `0 0 10px ${colors.primary}33`,
+                color: colors.accent.blue,
+                borderColor: `${colors.accent.blue}33`,
               }),
               ...(!isActive && {
                 color: colors.textSecondary,

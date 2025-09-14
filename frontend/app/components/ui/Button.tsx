@@ -5,6 +5,7 @@ import {
   ComponentVariant,
 } from './types';
 import { cn } from './utils';
+// Removed unused import: createCompleteInteractionStates
 
 /**
  * Button component props extending the base interactive component props
@@ -60,16 +61,15 @@ const LoadingSpinner: React.FC<{ size: 'sm' | 'md' | 'lg' }> = ({ size }) => {
 };
 
 /**
- * Get variant-specific classes for the button - Flat, borderless design
+ * Get variant-specific classes for the button - Flat, borderless design with subtle interaction feedback
  */
 const getVariantClasses = (variant: ComponentVariant): string => {
   const variants = {
     primary: cn(
       // Flat default state - no borders, minimal visual weight
       'bg-accent-blue-500 text-neutral-white border-none',
-      // Subtle hover state - light background change only
+      // Subtle interaction states using new system
       'hover:bg-accent-blue-600',
-      // Minimal active state
       'active:bg-accent-blue-700',
       // Dark mode flat styling
       'dark:bg-accent-blue-600',
@@ -79,9 +79,8 @@ const getVariantClasses = (variant: ComponentVariant): string => {
     secondary: cn(
       // Flat default state - no borders or visual weight
       'bg-neutral-100 text-neutral-900 border-none',
-      // Subtle hover state - light gray background only
+      // Subtle interaction states - light gray backgrounds only
       'hover:bg-neutral-200',
-      // Minimal active state
       'active:bg-neutral-300',
       // Dark mode flat styling
       'dark:bg-neutral-700 dark:text-neutral-100',
@@ -91,21 +90,17 @@ const getVariantClasses = (variant: ComponentVariant): string => {
     outline: cn(
       // Flat transparent default - borderless
       'bg-transparent text-neutral-700 border-none',
-      // Subtle hover state - light background appears
-      'hover:bg-neutral-50',
-      // Minimal active state
-      'active:bg-neutral-100',
+      // Subtle interaction states - light background appears
+      'hover:bg-neutral-100 dark:hover:bg-neutral-800',
+      'active:bg-neutral-200 dark:active:bg-neutral-700',
       // Dark mode flat styling
-      'dark:text-neutral-300',
-      'dark:hover:bg-neutral-800',
-      'dark:active:bg-neutral-700'
+      'dark:text-neutral-300'
     ),
     ghost: cn(
       // Completely flat and borderless - typography weight only
       'bg-transparent text-neutral-700 border-none',
-      // Subtle hover state - minimal background
+      // Subtle interaction states - minimal background changes
       'hover:bg-neutral-100 hover:text-neutral-900',
-      // Minimal active state
       'active:bg-neutral-200',
       // Dark mode flat styling
       'dark:text-neutral-300',
@@ -115,9 +110,8 @@ const getVariantClasses = (variant: ComponentVariant): string => {
     danger: cn(
       // Flat error state - no borders
       'bg-accent-red-500 text-neutral-white border-none',
-      // Subtle hover state
+      // Subtle interaction states
       'hover:bg-accent-red-600',
-      // Minimal active state
       'active:bg-accent-red-700',
       // Dark mode flat styling
       'dark:bg-accent-red-600',
@@ -146,7 +140,7 @@ const getSizeClasses = (size: 'sm' | 'md' | 'lg'): string => {
 };
 
 /**
- * Get minimal focus ring classes for accessibility compliance - Flat design
+ * Get minimal focus ring classes for accessibility compliance - Flat design with subtle feedback
  */
 const getFocusRingClasses = (variant: ComponentVariant): string => {
   const focusRings = {
@@ -158,10 +152,12 @@ const getFocusRingClasses = (variant: ComponentVariant): string => {
   };
 
   return cn(
-    // Minimal focus states for accessibility - no heavy styling
+    // Minimal focus states for accessibility - subtle outline only
     'focus:outline-none focus:ring-1 focus:ring-offset-1',
     // Subtle focus ring offset for flat design
     'dark:focus:ring-offset-neutral-900',
+    // Enhanced focus visibility for keyboard navigation
+    'focus-visible:ring-2',
     focusRings[variant]
   );
 };
@@ -219,7 +215,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const baseClasses = cn(
-      // Base styles - flat, borderless design
+      // Base styles - flat, borderless design with subtle interaction feedback
       'inline-flex items-center justify-center',
       'border-none rounded-md', // Minimal border radius for flat design
       'transition-colors duration-200 ease-in-out', // Only color transitions, no transform
@@ -228,18 +224,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       // Size classes
       getSizeClasses(size),
 
-      // Variant classes
+      // Variant classes with integrated interaction states
       getVariantClasses(variant),
 
-      // Focus ring classes
+      // Focus ring classes with enhanced accessibility
       getFocusRingClasses(variant),
 
-      // State classes - minimal visual changes
+      // State classes - minimal visual changes preserving flat aesthetic
       {
         'w-full': fullWidth,
         'opacity-50 cursor-not-allowed': isDisabled,
         'cursor-wait': loading,
-        // Removed active:scale-95 for flat design - no 3D effects
+        // Maintain flat design - no scale transforms or 3D effects
       }
     );
 

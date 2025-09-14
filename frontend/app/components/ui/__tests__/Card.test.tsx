@@ -34,7 +34,7 @@ describe('Card Components', () => {
 
       expect(screen.getByTestId('card')).toHaveClass(
         'bg-white',
-        'dark:bg-gray-800'
+        'dark:bg-neutral-800'
       );
 
       rerender(
@@ -45,7 +45,7 @@ describe('Card Components', () => {
 
       expect(screen.getByTestId('card')).toHaveClass(
         'bg-transparent',
-        'border-2'
+        'border'
       );
 
       rerender(
@@ -54,7 +54,10 @@ describe('Card Components', () => {
         </Card>
       );
 
-      expect(screen.getByTestId('card')).toHaveClass('shadow-lg');
+      expect(screen.getByTestId('card')).toHaveClass(
+        'bg-white',
+        'dark:bg-neutral-800'
+      );
     });
 
     it('handles interactive behavior correctly', () => {
@@ -145,7 +148,7 @@ describe('Card Components', () => {
         </CardContent>
       );
 
-      expect(screen.getByTestId('content')).toHaveClass('px-4', 'py-3');
+      expect(screen.getByTestId('content')).toHaveClass('px-6', 'py-4');
 
       rerender(
         <CardContent data-testid="content" padding="lg">
@@ -153,7 +156,7 @@ describe('Card Components', () => {
         </CardContent>
       );
 
-      expect(screen.getByTestId('content')).toHaveClass('px-8', 'py-6');
+      expect(screen.getByTestId('content')).toHaveClass('px-10', 'py-8');
     });
   });
 

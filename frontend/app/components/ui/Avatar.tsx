@@ -140,10 +140,10 @@ export const Avatar: React.FC<AvatarProps> = ({
     <div
       className={cn(
         'relative inline-flex items-center justify-center rounded-full overflow-hidden',
-        'bg-gray-200 dark:bg-gray-700',
+        'bg-gray-100 dark:bg-gray-800',
         getSizeClasses(),
-        onClick && 'cursor-pointer hover:opacity-80',
-        createTransition(['opacity']),
+        onClick && 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700',
+        createTransition(['background-color']),
         className
       )}
       onClick={onClick}
@@ -183,16 +183,16 @@ export const Avatar: React.FC<AvatarProps> = ({
         />
       )}
 
-      {/* Loading state */}
+      {/* Loading state - flat design */}
       {isLoading && (
         <div
           className={cn(
             'absolute inset-0 flex items-center justify-center',
-            'bg-gray-200 dark:bg-gray-700'
+            'bg-gray-100 dark:bg-gray-800'
           )}
           data-testid={`${dataTestId}-loading`}
         >
-          <div className="animate-pulse w-full h-full bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="animate-pulse w-full h-full bg-gray-200 dark:bg-gray-700 rounded-full" />
         </div>
       )}
 
@@ -209,11 +209,11 @@ export const Avatar: React.FC<AvatarProps> = ({
         </span>
       )}
 
-      {/* Status indicator */}
+      {/* Status indicator - subtle flat design */}
       {status && showStatus && (
         <div
           className={cn(
-            'absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-white dark:border-gray-900',
+            'absolute -bottom-0.5 -right-0.5 rounded-full',
             getStatusClasses(),
             getStatusSizeClasses()
           )}

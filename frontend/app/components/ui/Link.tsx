@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 // import NextLink from 'next/link';
 import { BaseComponentProps, ComponentVariant } from './types';
 import { cn } from './utils';
+// Removed unused import: createCompleteInteractionStates
 
 /**
  * Link component props extending the base component props
@@ -44,49 +45,59 @@ const ExternalLinkIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /**
- * Get variant-specific classes for the link
+ * Get variant-specific classes for the link with subtle interaction feedback
  */
 const getVariantClasses = (variant: ComponentVariant): string => {
   const variants = {
     primary: cn(
-      'text-primary-600 decoration-primary-600',
-      'hover:text-primary-700 hover:decoration-primary-700',
-      'active:text-primary-800 active:decoration-primary-800',
-      'dark:text-primary-400 dark:decoration-primary-400',
-      'dark:hover:text-primary-300 dark:hover:decoration-primary-300',
-      'dark:active:text-primary-200 dark:active:decoration-primary-200'
+      'text-accent-blue-600 decoration-accent-blue-600',
+      // Subtle hover state - enhanced color and decoration
+      'hover:text-accent-blue-700 hover:decoration-2',
+      // Minimal active state
+      'active:text-accent-blue-800',
+      'dark:text-accent-blue-400 dark:decoration-accent-blue-400',
+      'dark:hover:text-accent-blue-300 dark:hover:decoration-2',
+      'dark:active:text-accent-blue-200'
     ),
     secondary: cn(
-      'text-gray-600 decoration-gray-600',
-      'hover:text-gray-700 hover:decoration-gray-700',
-      'active:text-gray-800 active:decoration-gray-800',
-      'dark:text-gray-400 dark:decoration-gray-400',
-      'dark:hover:text-gray-300 dark:hover:decoration-gray-300',
-      'dark:active:text-gray-200 dark:active:decoration-gray-200'
+      'text-neutral-600 decoration-neutral-600',
+      // Subtle hover state - enhanced contrast
+      'hover:text-neutral-700 hover:decoration-2',
+      // Minimal active state
+      'active:text-neutral-800',
+      'dark:text-neutral-400 dark:decoration-neutral-400',
+      'dark:hover:text-neutral-300 dark:hover:decoration-2',
+      'dark:active:text-neutral-200'
     ),
     outline: cn(
-      'text-gray-700 decoration-gray-700',
-      'hover:text-gray-800 hover:decoration-gray-800',
-      'active:text-gray-900 active:decoration-gray-900',
-      'dark:text-gray-300 dark:decoration-gray-300',
-      'dark:hover:text-gray-200 dark:hover:decoration-gray-200',
-      'dark:active:text-gray-100 dark:active:decoration-gray-100'
+      'text-neutral-700 decoration-neutral-700',
+      // Subtle hover state - enhanced contrast
+      'hover:text-neutral-900 hover:decoration-2',
+      // Minimal active state
+      'active:text-neutral-800',
+      'dark:text-neutral-300 dark:decoration-neutral-300',
+      'dark:hover:text-neutral-100 dark:hover:decoration-2',
+      'dark:active:text-neutral-200'
     ),
     ghost: cn(
-      'text-gray-500 decoration-gray-500',
-      'hover:text-gray-600 hover:decoration-gray-600',
-      'active:text-gray-700 active:decoration-gray-700',
-      'dark:text-gray-500 dark:decoration-gray-500',
-      'dark:hover:text-gray-400 dark:hover:decoration-gray-400',
-      'dark:active:text-gray-300 dark:active:decoration-gray-300'
+      'text-neutral-500 decoration-neutral-500',
+      // Subtle hover state - enhanced visibility
+      'hover:text-neutral-700 hover:decoration-2',
+      // Minimal active state
+      'active:text-neutral-600',
+      'dark:text-neutral-500 dark:decoration-neutral-500',
+      'dark:hover:text-neutral-300 dark:hover:decoration-2',
+      'dark:active:text-neutral-400'
     ),
     danger: cn(
-      'text-error-600 decoration-error-600',
-      'hover:text-error-700 hover:decoration-error-700',
-      'active:text-error-800 active:decoration-error-800',
-      'dark:text-error-400 dark:decoration-error-400',
-      'dark:hover:text-error-300 dark:hover:decoration-error-300',
-      'dark:active:text-error-200 dark:active:decoration-error-200'
+      'text-accent-red-600 decoration-accent-red-600',
+      // Subtle hover state - enhanced error indication
+      'hover:text-accent-red-700 hover:decoration-2',
+      // Minimal active state
+      'active:text-accent-red-800',
+      'dark:text-accent-red-400 dark:decoration-accent-red-400',
+      'dark:hover:text-accent-red-300 dark:hover:decoration-2',
+      'dark:active:text-accent-red-200'
     ),
   };
 
@@ -94,20 +105,23 @@ const getVariantClasses = (variant: ComponentVariant): string => {
 };
 
 /**
- * Get focus ring classes based on variant
+ * Get focus ring classes based on variant with enhanced accessibility
  */
 const getFocusRingClasses = (variant: ComponentVariant): string => {
   const focusRings = {
-    primary: 'focus:ring-primary-500',
-    secondary: 'focus:ring-gray-500',
-    outline: 'focus:ring-gray-500',
-    ghost: 'focus:ring-gray-500',
-    danger: 'focus:ring-error-500',
+    primary: 'focus:ring-accent-blue-500',
+    secondary: 'focus:ring-neutral-400',
+    outline: 'focus:ring-neutral-400',
+    ghost: 'focus:ring-neutral-400',
+    danger: 'focus:ring-accent-red-500',
   };
 
   return cn(
-    'focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-sm',
-    'dark:focus:ring-offset-gray-900',
+    // Minimal focus ring for flat design with enhanced visibility
+    'focus:outline-none focus:ring-1 focus:ring-offset-1 rounded-sm',
+    'dark:focus:ring-offset-neutral-900',
+    // Enhanced focus visibility for keyboard navigation
+    'focus-visible:ring-2',
     focusRings[variant]
   );
 };

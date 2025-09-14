@@ -51,19 +51,19 @@ export interface TabBarProps extends BaseComponentProps {
 }
 
 /**
- * Get size-specific classes for tabs
+ * Get size-specific classes for tabs - generous spacing for flat design
  */
 const getSizeClasses = (size: 'sm' | 'md' | 'lg'): string => {
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'px-6 py-4 text-sm',
+    md: 'px-8 py-5 text-sm',
+    lg: 'px-10 py-6 text-base',
   };
   return sizes[size];
 };
 
 /**
- * Get variant-specific classes for tabs
+ * Get variant-specific classes for tabs - flat, borderless design with typography hierarchy
  */
 const getVariantClasses = (
   variant: 'default' | 'pills' | 'underline',
@@ -71,24 +71,28 @@ const getVariantClasses = (
 ): string => {
   const variants = {
     default: {
-      base: 'border-b-2 border-transparent',
-      active: 'border-primary-500 text-primary-600 dark:text-primary-400',
+      base: '',
+      // Active state uses typography weight for hierarchy (flat design principle)
+      active: 'text-gray-900 font-semibold dark:text-gray-100',
+      // Inactive state with minimal hover feedback
       inactive:
-        'text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300',
+        'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100',
     },
     pills: {
-      base: 'rounded-lg',
+      base: '',
+      // Flat pills without heavy styling
       active:
-        'bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300',
+        'bg-gray-50 text-gray-900 font-semibold dark:bg-gray-900/50 dark:text-gray-100',
       inactive:
-        'text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800',
+        'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100',
     },
     underline: {
-      base: 'border-b-2 border-transparent relative',
+      base: 'relative',
+      // Minimal underline for active state
       active:
-        'text-primary-600 dark:text-primary-400 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary-500',
+        'text-gray-900 font-semibold dark:text-gray-100 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gray-900 dark:after:bg-gray-100',
       inactive:
-        'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+        'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100',
     },
   };
 
@@ -127,9 +131,8 @@ const Tab: React.FC<{
   };
 
   const baseClasses = cn(
-    'inline-flex items-center justify-center font-medium transition-all duration-200',
-    'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-    'dark:focus:ring-offset-gray-900',
+    'inline-flex items-center justify-center font-medium transition-colors duration-200',
+    'focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600',
     getSizeClasses(size),
     getVariantClasses(variant, tab.active || false),
     {
@@ -216,12 +219,15 @@ export const TabBar = forwardRef<HTMLDivElement, TabBarProps>(
     const activeTab = processedTabs.find(tab => tab.active);
 
     // Handle tab selection
-    const handleTabSelect = (tab: TabItem) => {
-      if (!isControlled) {
-        setInternalActiveTab(tab.id);
-      }
-      onTabChange?.(tab);
-    };
+    const handleTabSelect = useCallback(
+      (tab: TabItem) => {
+        if (!isControlled) {
+          setInternalActiveTab(tab.id);
+        }
+        onTabChange?.(tab);
+      },
+      [isControlled, onTabChange]
+    );
 
     // Handle keyboard navigation
     useEffect(() => {
@@ -271,14 +277,16 @@ export const TabBar = forwardRef<HTMLDivElement, TabBarProps>(
 
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [processedTabs, activeTabId]);
+    }, [processedTabs, activeTabId, handleTabSelect]);
 
     const tabListClasses = cn('flex', {
-      'border-b border-gray-200 dark:border-gray-700':
-        variant === 'default' || variant === 'underline',
-      'bg-gray-100 dark:bg-gray-800 rounded-lg p-1': variant === 'pills',
+      // Flat pills without heavy background styling
+      'bg-gray-50/50 dark:bg-gray-900/25 p-3': variant === 'pills',
       'overflow-x-auto': scrollable,
       'w-full': fullWidth,
+      // Add generous spacing between tabs
+      'space-x-8': variant !== 'pills',
+      'space-x-2': variant === 'pills',
     });
 
     return (
@@ -307,13 +315,13 @@ export const TabBar = forwardRef<HTMLDivElement, TabBarProps>(
           ))}
         </div>
 
-        {/* Tab Content */}
+        {/* Tab Content - generous spacing for airy layout */}
         {showContent && activeTab?.content && (
           <div
             role="tabpanel"
             id={`tabpanel-${activeTab.id}`}
             aria-labelledby={`tab-${activeTab.id}`}
-            className="mt-4"
+            className="mt-12"
             tabIndex={0}
           >
             {activeTab.content}

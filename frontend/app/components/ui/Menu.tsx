@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { BaseComponentProps, ComponentSize } from './types';
 import { cn } from './utils';
+// Removed unused import: createCompleteInteractionStates
 
 /**
  * Menu item interface
@@ -82,13 +83,13 @@ const getPlacementClasses = (placement: MenuProps['placement']): string => {
 };
 
 /**
- * Get size classes for menu items
+ * Get size classes for menu items - generous spacing for flat design
  */
 const getSizeClasses = (size: 'sm' | 'md' | 'lg'): string => {
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-5 py-3 text-base',
+    sm: 'px-6 py-4 text-sm',
+    md: 'px-8 py-5 text-sm',
+    lg: 'px-10 py-6 text-base',
   };
   return sizes[size];
 };
@@ -190,11 +191,11 @@ const MenuItemComponent: React.FC<{
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showSubmenu]);
 
-  // Separator item
+  // Separator item - minimal styling for flat design
   if (item.separator) {
     return (
       <div
-        className="my-1 border-t border-gray-200 dark:border-gray-700"
+        className="my-6 border-t border-gray-100 dark:border-gray-800"
         role="separator"
         aria-orientation="horizontal"
       />
@@ -207,15 +208,20 @@ const MenuItemComponent: React.FC<{
   }
 
   const itemClasses = cn(
-    'flex items-center justify-between w-full text-left cursor-pointer transition-colors duration-150',
-    'focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800',
+    'flex items-center justify-between w-full text-left cursor-pointer transition-colors duration-200',
+    // Enhanced interaction feedback for menu items
+    'focus:outline-none focus:bg-neutral-100/75 dark:focus:bg-neutral-800/75',
+    'hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50',
+    'active:bg-neutral-200/50 dark:active:bg-neutral-700/50',
     getSizeClasses(size),
     {
-      'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800':
+      // Clean text-based styling with subtle interaction feedback
+      'text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100':
         !item.disabled && !item.destructive,
-      'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20':
+      'text-accent-red-600 hover:text-accent-red-700 dark:text-accent-red-400 dark:hover:text-accent-red-300':
         !item.disabled && item.destructive,
-      'text-gray-400 cursor-not-allowed dark:text-gray-600': item.disabled,
+      'text-neutral-400 cursor-not-allowed dark:text-neutral-600 opacity-50':
+        item.disabled,
     }
   );
 
@@ -236,12 +242,12 @@ const MenuItemComponent: React.FC<{
         }
       >
         <div className="flex items-center flex-1 min-w-0">
-          {item.icon && <span className="flex-shrink-0 mr-3">{item.icon}</span>}
+          {item.icon && <span className="flex-shrink-0 mr-6">{item.icon}</span>}
 
           <span className="truncate">{item.label}</span>
         </div>
 
-        <div className="flex items-center ml-3 space-x-2">
+        <div className="flex items-center ml-8 space-x-4">
           {item.shortcut && (
             <span className="text-xs text-gray-400 dark:text-gray-500">
               {item.shortcut}
@@ -267,14 +273,14 @@ const MenuItemComponent: React.FC<{
         </div>
       </div>
 
-      {/* Submenu */}
+      {/* Submenu - flat panel with generous spacing */}
       {item.submenu && item.submenu.length > 0 && showSubmenu && (
         <div
           ref={submenuRef}
           className={cn(
-            'absolute left-full top-0 ml-1 z-50',
-            'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700',
-            'rounded-lg shadow-lg min-w-48 py-1'
+            'absolute left-full top-0 ml-3 z-50',
+            'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800',
+            'min-w-52 py-4'
           )}
           role="menu"
           aria-orientation="vertical"
@@ -344,9 +350,9 @@ export const Menu = forwardRef<HTMLDivElement, MenuProps>(
     };
 
     // Close menu
-    const closeMenu = () => {
+    const closeMenu = useCallback(() => {
       handleOpenChange(false);
-    };
+    }, [handleOpenChange]);
 
     // Handle item selection
     const handleItemSelect = (_item: MenuItem) => {
@@ -443,7 +449,7 @@ export const Menu = forwardRef<HTMLDivElement, MenuProps>(
 
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen]);
+    }, [isOpen, closeMenu]);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -463,16 +469,16 @@ export const Menu = forwardRef<HTMLDivElement, MenuProps>(
       document.addEventListener('mousedown', handleClickOutside);
       return () =>
         document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen]);
+    }, [isOpen, closeMenu]);
 
     const menuClasses = cn(
       'absolute z-50 bg-white dark:bg-gray-900',
-      'border border-gray-200 dark:border-gray-700',
-      'rounded-lg shadow-lg py-1',
+      'border border-gray-100 dark:border-gray-800',
+      'py-4',
       'focus:outline-none',
       getPlacementClasses(placement),
       {
-        'min-w-48': !width,
+        'min-w-52': !width,
       }
     );
 

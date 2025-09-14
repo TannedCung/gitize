@@ -1,6 +1,7 @@
 import React, { forwardRef, useId } from 'react';
 import { BaseComponentProps } from './types';
 import { cn } from './utils';
+// Removed unused import: createCompleteInteractionStates
 
 /**
  * Toggle component props
@@ -72,7 +73,7 @@ const getSizeClasses = (size: 'sm' | 'md' | 'lg') => {
 };
 
 /**
- * Get variant-specific classes for the toggle
+ * Get variant-specific classes for the toggle - flat design with subtle interaction feedback
  */
 const getVariantClasses = (
   variant: 'primary' | 'success' | 'warning' | 'error',
@@ -81,39 +82,39 @@ const getVariantClasses = (
   const variants = {
     primary: {
       track: checked
-        ? 'bg-primary-500 dark:bg-primary-600'
-        : 'bg-gray-200 dark:bg-gray-700',
+        ? 'bg-neutral-900 dark:bg-neutral-100'
+        : 'bg-neutral-200 dark:bg-neutral-700',
       trackHover: checked
-        ? 'hover:bg-primary-600 dark:hover:bg-primary-700'
-        : 'hover:bg-gray-300 dark:hover:bg-gray-600',
-      focusRing: 'focus:ring-primary-500 dark:focus:ring-primary-600',
+        ? 'hover:bg-neutral-800 dark:hover:bg-neutral-200'
+        : 'hover:bg-neutral-300 dark:hover:bg-neutral-600',
+      focusRing: 'focus:ring-neutral-400 dark:focus:ring-neutral-500',
     },
     success: {
       track: checked
-        ? 'bg-success-500 dark:bg-success-600'
-        : 'bg-gray-200 dark:bg-gray-700',
+        ? 'bg-accent-green-600 dark:bg-accent-green-500'
+        : 'bg-neutral-200 dark:bg-neutral-700',
       trackHover: checked
-        ? 'hover:bg-success-600 dark:hover:bg-success-700'
-        : 'hover:bg-gray-300 dark:hover:bg-gray-600',
-      focusRing: 'focus:ring-success-500 dark:focus:ring-success-600',
+        ? 'hover:bg-accent-green-700 dark:hover:bg-accent-green-400'
+        : 'hover:bg-neutral-300 dark:hover:bg-neutral-600',
+      focusRing: 'focus:ring-accent-green-400 dark:focus:ring-accent-green-500',
     },
     warning: {
       track: checked
-        ? 'bg-warning-500 dark:bg-warning-600'
-        : 'bg-gray-200 dark:bg-gray-700',
+        ? 'bg-accent-amber-500 dark:bg-accent-amber-400'
+        : 'bg-neutral-200 dark:bg-neutral-700',
       trackHover: checked
-        ? 'hover:bg-warning-600 dark:hover:bg-warning-700'
-        : 'hover:bg-gray-300 dark:hover:bg-gray-600',
-      focusRing: 'focus:ring-warning-500 dark:focus:ring-warning-600',
+        ? 'hover:bg-accent-amber-600 dark:hover:bg-accent-amber-300'
+        : 'hover:bg-neutral-300 dark:hover:bg-neutral-600',
+      focusRing: 'focus:ring-accent-amber-400 dark:focus:ring-accent-amber-500',
     },
     error: {
       track: checked
-        ? 'bg-error-500 dark:bg-error-600'
-        : 'bg-gray-200 dark:bg-gray-700',
+        ? 'bg-accent-red-500 dark:bg-accent-red-400'
+        : 'bg-neutral-200 dark:bg-neutral-700',
       trackHover: checked
-        ? 'hover:bg-error-600 dark:hover:bg-error-700'
-        : 'hover:bg-gray-300 dark:hover:bg-gray-600',
-      focusRing: 'focus:ring-error-500 dark:focus:ring-error-600',
+        ? 'hover:bg-accent-red-600 dark:hover:bg-accent-red-300'
+        : 'hover:bg-neutral-300 dark:hover:bg-neutral-600',
+      focusRing: 'focus:ring-accent-red-400 dark:focus:ring-accent-red-500',
     },
   };
 
@@ -176,38 +177,42 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
       }
     };
 
-    // Track styles
+    // Track styles - flat design with subtle interaction feedback
     const trackClasses = cn(
-      // Base styles
-      'relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent',
+      // Base styles - flat rounded rectangle with no shadows
+      'relative inline-flex flex-shrink-0 cursor-pointer rounded-full',
       'transition-all duration-300 ease-in-out',
-      'focus:outline-none focus:ring-2 focus:ring-offset-2',
+      'focus:outline-none focus:ring-1 focus:ring-offset-1',
+      'dark:focus:ring-offset-neutral-900',
 
       // Size classes
       sizeClasses.track,
 
-      // Variant classes
+      // Variant classes with enhanced interaction feedback
       variantClasses.track,
       variantClasses.trackHover,
       variantClasses.focusRing,
 
-      // State classes
+      // Enhanced focus visibility for keyboard navigation
+      'focus-visible:ring-2',
+
+      // State classes with consistent styling
       {
         'opacity-50 cursor-not-allowed': disabled,
         'cursor-pointer': !disabled,
       }
     );
 
-    // Thumb styles
+    // Thumb styles - flat circle with no shadows and subtle interaction feedback
     const thumbClasses = cn(
-      // Base styles
-      'pointer-events-none inline-block rounded-full bg-white shadow-lg ring-0',
+      // Base styles - flat white circle with no shadow
+      'pointer-events-none inline-block rounded-full bg-neutral-white ring-0',
       'transition-all duration-300 ease-in-out transform',
 
       // Size classes
       sizeClasses.thumb,
 
-      // Position classes
+      // Position classes with smooth animation
       {
         [sizeClasses.thumbTranslate]: checked,
         'translate-x-0': !checked,

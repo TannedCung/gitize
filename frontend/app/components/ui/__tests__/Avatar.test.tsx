@@ -82,7 +82,10 @@ describe('Avatar Component', () => {
 
       // Find the image element and simulate load event
       const img = screen.getByAltText('John Doe');
-      expect(img).toHaveAttribute('src', 'https://example.com/avatar.jpg');
+      // Next.js Image component transforms the src, so we check for the presence of the original URL
+      expect(img.getAttribute('src')).toContain(
+        'https%3A%2F%2Fexample.com%2Favatar.jpg'
+      );
 
       // Simulate successful image load
       fireEvent.load(img);
@@ -268,7 +271,8 @@ describe('Avatar Component', () => {
 
       expect(screen.getByTestId('avatar')).toHaveClass(
         'cursor-pointer',
-        'hover:opacity-80'
+        'hover:bg-gray-200',
+        'dark:hover:bg-gray-700'
       );
     });
   });
