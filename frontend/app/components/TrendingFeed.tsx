@@ -123,12 +123,12 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
   return (
     <div className={`${className}`} role="main">
       {/* Header */}
-      <header className="mb-8 lg:mb-12">
-        <div className="text-center mb-8 lg:mb-10">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 lg:mb-6 px-4">
+      <header className="mb-12 lg:mb-20">
+        <div className="text-center mb-12 lg:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-white mb-6 lg:mb-8 px-4 leading-tight">
             {isSearchMode ? 'Search Results' : 'Trending Repositories'}
           </h1>
-          <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4 leading-relaxed">
+          <p className="text-lg sm:text-xl lg:text-2xl text-neutral-600 dark:text-neutral-300 max-w-4xl mx-auto px-4 leading-relaxed">
             {isSearchMode
               ? `Found ${repositories.length} repositories matching "${searchQuery}"`
               : 'Discover the most popular GitHub repositories with AI-powered summaries'}
@@ -136,7 +136,7 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
         </div>
 
         {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8 lg:mb-10 px-4">
+        <div className="max-w-3xl mx-auto mb-12 lg:mb-16 px-4">
           <SearchBar
             onSearch={handleSearch}
             initialValue={searchQuery}
@@ -145,7 +145,7 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
         {/* Mobile Filter Toggle */}
         <div className="lg:hidden">
           <Button
@@ -170,27 +170,23 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
 
         {/* Sidebar with Filters */}
         <aside
-          className={`lg:w-80 flex-shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}
+          className={`lg:w-96 flex-shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}
           id="mobile-filters"
           aria-label="Repository filters and options"
         >
-          <div className="lg:sticky lg:top-6 space-y-6">
+          <div className="lg:sticky lg:top-8 space-y-8">
             <FilterPanel
               filters={filters}
               onFiltersChange={handleFiltersChange}
             />
 
-            {/* Results Summary */}
+            {/* Results Summary - Flat design with typography emphasis */}
             {!activeQuery.isLoading && (
-              <div
-                className="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
-                role="status"
-                aria-live="polite"
-              >
-                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <div className="py-8" role="status" aria-live="polite">
+                <p className="text-base text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">
                   {isSearchMode ? (
                     <>
-                      <span className="text-primary-600 dark:text-primary-400">
+                      <span className="text-accent-blue-600 dark:text-accent-blue-400 font-semibold">
                         {repositories.length}
                       </span>{' '}
                       repositories found
@@ -198,7 +194,7 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
                         <>
                           {' '}
                           for &quot;
-                          <span className="text-gray-900 dark:text-white">
+                          <span className="text-neutral-900 dark:text-neutral-white font-semibold">
                             {searchQuery}
                           </span>
                           &quot;
@@ -207,7 +203,7 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
                     </>
                   ) : (
                     <>
-                      <span className="text-primary-600 dark:text-primary-400">
+                      <span className="text-accent-blue-600 dark:text-accent-blue-400 font-semibold">
                         {repositories.length}
                       </span>{' '}
                       trending repositories
@@ -215,7 +211,7 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
                   )}
                 </p>
                 {activeQuery.hasNextPage && (
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-4 leading-relaxed">
                     Scroll down to load more
                   </p>
                 )}
@@ -229,7 +225,7 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
           {/* Loading State */}
           {activeQuery.isLoading && repositories.length === 0 && (
             <div
-              className="space-y-6"
+              className="space-y-8"
               role="status"
               aria-label="Loading repositories"
             >
@@ -242,13 +238,13 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
 
           {/* Empty State */}
           {!activeQuery.isLoading && repositories.length === 0 && (
-            <div className="text-center py-16" role="status">
+            <div className="text-center py-24" role="status">
               <div
-                className="text-gray-400 dark:text-gray-600 mb-6"
+                className="text-neutral-400 dark:text-neutral-600 mb-8"
                 aria-hidden="true"
               >
                 <svg
-                  className="mx-auto h-16 w-16"
+                  className="mx-auto h-20 w-20"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -261,12 +257,12 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
                   />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
                 {isSearchMode
                   ? 'No repositories found'
                   : 'No trending repositories'}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
+              <p className="text-neutral-600 dark:text-neutral-400 text-lg leading-relaxed">
                 {isSearchMode
                   ? 'Try adjusting your search query or filters'
                   : 'Check back later for trending repositories'}
@@ -274,10 +270,10 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
             </div>
           )}
 
-          {/* Repository List */}
+          {/* Repository List - Enhanced spacing for flat design */}
           {repositories.length > 0 && (
             <section aria-label="Repository list">
-              <div className="space-y-6 sm:space-y-8">
+              <div className="space-y-16 sm:space-y-20">
                 {repositories.map((repository, index) => (
                   <LazyRepositoryCard
                     key={`${repository.id}-${index}`}
@@ -289,13 +285,13 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
                 {/* Load More Sentinel */}
                 <div
                   id="load-more-sentinel"
-                  className="h-4"
+                  className="h-8"
                   aria-hidden="true"
                 />
 
                 {/* Loading More Indicator */}
                 {activeQuery.isFetchingNextPage && (
-                  <div className="py-12" role="status" aria-live="polite">
+                  <div className="py-20" role="status" aria-live="polite">
                     <Loading text="Loading more repositories..." />
                   </div>
                 )}
@@ -304,8 +300,8 @@ export function TrendingFeed({ className = '' }: TrendingFeedProps) {
                 {!activeQuery.hasNextPage &&
                   !activeQuery.isFetchingNextPage &&
                   repositories.length > 0 && (
-                    <div className="text-center py-12" role="status">
-                      <p className="text-gray-500 dark:text-gray-500 text-lg">
+                    <div className="text-center py-20" role="status">
+                      <p className="text-neutral-500 dark:text-neutral-500 text-lg leading-relaxed">
                         You&apos;ve reached the end of the results
                       </p>
                     </div>

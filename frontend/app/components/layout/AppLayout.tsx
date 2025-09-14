@@ -38,7 +38,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   useFocusTrap(mobileMenuRef, mobileMenuOpen);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-neutral-white dark:bg-neutral-900 transition-colors">
       {/* Header */}
       <NavigationBar
         items={navigation.map(item => ({
@@ -48,21 +48,21 @@ export function AppLayout({ children }: AppLayoutProps) {
         brand={
           <Link
             href="/"
-            className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
+            className="flex items-center space-x-3 focus:outline-none focus:ring-1 focus:ring-accent-blue-500 focus:ring-offset-2 rounded-sm"
             aria-label="GitHub Trending - Go to homepage"
           >
             <div
-              className="h-7 w-7 sm:h-8 sm:w-8 bg-primary-600 rounded-lg flex items-center justify-center"
+              className="h-8 w-8 sm:h-9 sm:w-9 bg-accent-blue-600 flex items-center justify-center"
               aria-hidden="true"
             >
-              <span className="text-white font-bold text-xs sm:text-sm">
+              <span className="text-neutral-white font-bold text-sm sm:text-base">
                 GT
               </span>
             </div>
-            <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hidden xs:block">
+            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-white hidden xs:block">
               Gitize
             </span>
-            <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white block xs:hidden">
+            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-white block xs:hidden">
               GT
             </span>
           </Link>
@@ -76,20 +76,17 @@ export function AppLayout({ children }: AppLayoutProps) {
       <main className="flex-1" id="main-content">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-6 focus:left-6 bg-primary-600 text-white px-4 py-2 rounded-lg z-50 font-medium"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-8 focus:left-8 bg-accent-blue-600 text-neutral-white px-6 py-3 z-50 font-medium"
         >
           Skip to main content
         </a>
         {children}
       </main>
 
-      {/* Footer */}
-      <footer
-        className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
-        role="contentinfo"
-      >
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
-          <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+      {/* Footer - Flat design with typography emphasis */}
+      <footer className="py-20" role="contentinfo">
+        <div className="mx-auto max-w-7xl px-8 lg:px-12">
+          <div className="text-center text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
             <p>
               &copy; 2024 GitHub Trending Summarizer. Built with Next.js and
               Rust.
