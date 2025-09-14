@@ -122,7 +122,14 @@ export function useThemeCSS() {
 
     // Convert design tokens to CSS variables
     Object.entries(designTokens.colors).forEach(([key, value]) => {
-      newCssVars[`--color-${key}`] = value;
+      if (typeof value === 'string') {
+        newCssVars[`--color-${key}`] = value;
+      } else if (typeof value === 'object') {
+        // Handle nested color objects like neutral and accent
+        Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+          newCssVars[`--color-${key}-${nestedKey}`] = nestedValue;
+        });
+      }
     });
 
     Object.entries(designTokens.spacing).forEach(([key, value]) => {

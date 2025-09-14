@@ -16,7 +16,14 @@ export function useDesignTokens() {
 
     // Flatten design tokens into CSS variable format
     Object.entries(designTokens.colors).forEach(([key, value]) => {
-      variables[`--color-${key}`] = value;
+      if (typeof value === 'string') {
+        variables[`--color-${key}`] = value;
+      } else if (typeof value === 'object') {
+        // Handle nested color objects like neutral and accent
+        Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+          variables[`--color-${key}-${nestedKey}`] = nestedValue;
+        });
+      }
     });
 
     Object.entries(designTokens.spacing).forEach(([key, value]) => {
@@ -74,26 +81,45 @@ export function useDesignTokens() {
     (colorKey: keyof typeof designTokens.colors, opacity: number) => {
       const color = designTokens.colors[colorKey];
 
-      // Convert hex to rgba
-      if (color.startsWith('#')) {
-        const hex = color.replace('#', '');
-        const r = parseInt(hex.substr(0, 2), 16);
-        const g = parseInt(hex.substr(2, 2), 16);
-        const b = parseInt(hex.substr(4, 2), 16);
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      // Only process string colors
+      if (typeof color === 'string') {
+        // Convert hex to rgba
+        if (color.startsWith('#')) {
+          const hex = color.replace('#', '');
+          const r = parseInt(hex.substr(0, 2), 16);
+          const g = parseInt(hex.substr(2, 2), 16);
+          const b = parseInt(hex.substr(4, 2), 16);
+          return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        }
+        return color;
       }
 
-      return color;
+      // For nested objects, return the first available color
+      if (typeof color === 'object') {
+        const firstColor = Object.values(color)[0];
+        if (typeof firstColor === 'string' && firstColor.startsWith('#')) {
+          const hex = firstColor.replace('#', '');
+          const r = parseInt(hex.substr(0, 2), 16);
+          const g = parseInt(hex.substr(2, 2), 16);
+          const b = parseInt(hex.substr(4, 2), 16);
+          return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        }
+        return firstColor;
+      }
+
+      return color as string;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [designTokens.colors]
   );
 
   // Generate AppFlowy brand gradient
   const getBrandGradient = useCallback(
     (direction: string = '135deg') => {
-      return `linear-gradient(${direction}, ${designTokens.colors.primary} 0%, ${designTokens.colors.secondary} 100%)`;
+      return `linear-gradient(${direction}, ${designTokens.colors.text} 0%, ${designTokens.colors.textSecondary} 100%)`;
     },
-    [designTokens.colors.primary, designTokens.colors.secondary]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [designTokens.colors.text, designTokens.colors.textSecondary]
   );
 
   // Get responsive spacing value
@@ -102,7 +128,7 @@ export function useDesignTokens() {
       const baseValue = parseFloat(designTokens.spacing[base]);
       return `${baseValue * multiplier}rem`;
     },
-    [designTokens.spacing]
+    [designTokens]
   );
 
   return {

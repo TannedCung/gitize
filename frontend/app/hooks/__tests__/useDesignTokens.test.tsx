@@ -43,13 +43,13 @@ function TestDesignTokensComponent() {
   return (
     <div>
       <div data-testid="theme">{theme}</div>
-      <div data-testid="primary-color">{colors.primary}</div>
+      <div data-testid="accent-blue-color">{colors.accent.blue}</div>
       <div data-testid="is-transitioning">{isTransitioning.toString()}</div>
-      <div data-testid="css-var-primary">{cssVariables['--color-primary']}</div>
-      <div data-testid="get-token">{getToken('colors', 'primary')}</div>
-      <div data-testid="css-variable">{getCSSVariable('color', 'primary')}</div>
+      <div data-testid="css-var-text">{cssVariables['--color-text']}</div>
+      <div data-testid="get-token">{getToken('colors', 'text')}</div>
+      <div data-testid="css-variable">{getCSSVariable('color', 'text')}</div>
       <div data-testid="color-with-opacity">
-        {getColorWithOpacity('primary', 0.5)}
+        {getColorWithOpacity('text', 0.5)}
       </div>
       <div data-testid="brand-gradient">{getBrandGradient()}</div>
       <div data-testid="responsive-spacing">
@@ -98,8 +98,10 @@ describe('useDesignTokens', () => {
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('light');
-    expect(screen.getByTestId('primary-color')).toHaveTextContent('#00B5FF');
-    expect(screen.getByTestId('css-var-primary')).toHaveTextContent('#00B5FF');
+    expect(screen.getByTestId('accent-blue-color')).toHaveTextContent(
+      '#3B82F6'
+    );
+    expect(screen.getByTestId('css-var-text')).toHaveTextContent('#171717');
   });
 
   it('should provide utility functions', () => {
@@ -109,15 +111,15 @@ describe('useDesignTokens', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByTestId('get-token')).toHaveTextContent('#00B5FF');
+    expect(screen.getByTestId('get-token')).toHaveTextContent('#171717');
     expect(screen.getByTestId('css-variable')).toHaveTextContent(
-      'var(--color-primary)'
+      'var(--color-text)'
     );
     expect(screen.getByTestId('color-with-opacity')).toHaveTextContent(
-      'rgba(0, 181, 255, 0.5)'
+      'rgba(23, 23, 23, 0.5)'
     );
     expect(screen.getByTestId('brand-gradient')).toHaveTextContent(
-      'linear-gradient(135deg, #00B5FF 0%, #9327FF 100%)'
+      'linear-gradient(135deg, #171717 0%, #525252 100%)'
     );
     expect(screen.getByTestId('responsive-spacing')).toHaveTextContent('3rem');
   });
@@ -132,7 +134,9 @@ describe('useDesignTokens', () => {
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
-    expect(screen.getByTestId('primary-color')).toHaveTextContent('#00C8FF');
+    expect(screen.getByTestId('accent-blue-color')).toHaveTextContent(
+      '#60A5FA'
+    );
   });
 });
 
