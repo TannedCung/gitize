@@ -263,9 +263,9 @@ export async function measurePerformance(page: Page): Promise<{
       const paint = performance.getEntriesByType('paint');
 
       const result = {
-        loadTime: navigation.loadEventEnd - navigation.navigationStart,
+        loadTime: navigation.loadEventEnd - navigation.startTime,
         domContentLoaded:
-          navigation.domContentLoadedEventEnd - navigation.navigationStart,
+          navigation.domContentLoadedEventEnd - navigation.startTime,
         firstContentfulPaint: 0,
         largestContentfulPaint: 0,
       };

@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Trending Summarizer",
+  "version": "1.0.0",
+  "description": "Discover trending GitHub repositories with AI-powered summaries",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://api.github.com/*", "http://localhost:8080/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "GitHub Trending"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

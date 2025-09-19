@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:extension": "npm run build && node scripts/build-extension.js",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",

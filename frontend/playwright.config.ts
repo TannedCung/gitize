@@ -47,9 +47,6 @@ export default defineConfig({
 
     /* Ignore HTTPS errors */
     ignoreHTTPSErrors: true,
-
-    /* API base URL for API tests */
-    baseURL: process.env.API_BASE_URL || 'http://localhost:8000',
   },
 
   /* Global setup and teardown */
@@ -116,8 +113,6 @@ export default defineConfig({
       testMatch: /.*performance.*\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
-        // Disable animations for consistent performance measurements
-        reducedMotion: 'reduce',
       },
       dependencies: ['setup'],
     },
@@ -130,8 +125,6 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         // Consistent settings for visual tests
         viewport: { width: 1280, height: 720 },
-        // Disable animations for consistent screenshots
-        reducedMotion: 'reduce',
       },
       dependencies: ['setup'],
     },
@@ -142,9 +135,6 @@ export default defineConfig({
       testMatch: /.*accessibility.*\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
-        // Enable accessibility features
-        forcedColors: 'none',
-        reducedMotion: 'no-preference',
       },
       dependencies: ['setup'],
     },

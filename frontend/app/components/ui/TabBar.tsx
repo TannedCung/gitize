@@ -1,6 +1,12 @@
 'use client';
 
-import React, { forwardRef, useRef, useEffect, useState } from 'react';
+import React, {
+  forwardRef,
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
 import { BaseComponentProps, ComponentSize } from './types';
 import { cn } from './utils';
 
