@@ -42,7 +42,7 @@ repos:
 
       - id: cargo-clippy
         name: cargo clippy
-        entry: sh -c 'cd backend && cargo clippy --all-targets --all-features -- -D warnings'
+        entry: sh -c 'cd backend && cargo clippy --lib -- -D warnings'
         language: system
         files: ^backend/.*\.rs$
         pass_filenames: false

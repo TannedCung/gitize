@@ -56,6 +56,9 @@ impl From<NewsletterServiceError> for ErrorResponse {
             NewsletterServiceError::AlreadySubscribed => "ALREADY_SUBSCRIBED",
             NewsletterServiceError::NotFound => "NOT_FOUND",
             NewsletterServiceError::InvalidToken => "INVALID_TOKEN",
+            NewsletterServiceError::PersonalizationError(_) => "PERSONALIZATION_ERROR",
+            NewsletterServiceError::ABTestError(_) => "AB_TEST_ERROR",
+            NewsletterServiceError::AnalyticsError(_) => "ANALYTICS_ERROR",
         };
 
         ErrorResponse {

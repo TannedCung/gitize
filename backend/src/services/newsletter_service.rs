@@ -3,10 +3,19 @@ use crate::models::{
     NewNewsletterSubscription, NewsletterSubscription, Repository, RepositoryFilters,
 };
 use crate::repositories::newsletter_repo::NewsletterRepository;
+use crate::services::ab_testing::{ABTest, ABTestError, ABTestingFramework, EventType};
 use crate::services::email_client::{EmailClient, EmailError};
+use crate::services::newsletter_analytics::{
+    CampaignAnalytics, EngagementEventType, NewsletterAnalyticsError, NewsletterAnalyticsService,
+    UTMParameters,
+};
 use crate::services::newsletter_template::{NewsletterTemplate, TemplateError};
+use crate::services::personalization_engine::{
+    PersonalizationEngine, PersonalizationError, PersonalizationPreferences, UserSegment,
+};
 use crate::services::repository_service::{RepositoryService, RepositoryServiceError};
-use chrono::{Datelike, Duration, Utc};
+use chrono::{DateTime, Datelike, Duration, Utc};
+use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
 use thiserror::Error;
@@ -23,6 +32,12 @@ pub enum NewsletterServiceError {
     EmailError(#[from] EmailError),
     #[error("Template error: {0}")]
     TemplateError(#[from] TemplateError),
+    #[error("Personalization error: {0}")]
+    PersonalizationError(#[from] PersonalizationError),
+    #[error("A/B testing error: {0}")]
+    ABTestError(#[from] ABTestError),
+    #[error("Newsletter analytics error: {0}")]
+    AnalyticsError(#[from] NewsletterAnalyticsError),
     #[error("Configuration error: {0}")]
     ConfigError(String),
     #[error("Validation error: {0}")]
@@ -40,6 +55,9 @@ pub struct NewsletterService {
     repository_service: Arc<RepositoryService>,
     email_client: EmailClient,
     template: NewsletterTemplate,
+    personalization_engine: PersonalizationEngine,
+    ab_testing_framework: ABTestingFramework,
+    analytics_service: NewsletterAnalyticsService,
     base_url: String,
 }
 
@@ -53,6 +71,9 @@ impl NewsletterService {
         })?;
 
         let template = NewsletterTemplate::new().map_err(NewsletterServiceError::TemplateError)?;
+        let personalization_engine = PersonalizationEngine::new();
+        let ab_testing_framework = ABTestingFramework::new();
+        let analytics_service = NewsletterAnalyticsService::new();
 
         let base_url = env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
 
@@ -61,6 +82,9 @@ impl NewsletterService {
             repository_service,
             email_client,
             template,
+            personalization_engine,
+            ab_testing_framework,
+            analytics_service,
             base_url,
         })
     }
@@ -362,6 +386,751 @@ impl NewsletterService {
 
         Ok(())
     }
+
+    /// Subscribe with advanced preferences
+    pub async fn subscribe_with_preferences(
+        &self,
+        email: String,
+        user_id: Option<i64>,
+        frequency: Option<String>,
+        preferred_languages: Option<Vec<String>>,
+        tech_stack_interests: Option<Vec<String>>,
+    ) -> Result<NewsletterSubscription, NewsletterServiceError> {
+        let mut conn = self.db_pool.get()?;
+
+        // Check if email is already subscribed
+        if NewsletterRepository::is_subscribed(&mut conn, &email)? {
+            return Err(NewsletterServiceError::AlreadySubscribed);
+        }
+
+        // Check if there's an inactive subscription we can reactivate
+        if let Some(existing) = NewsletterRepository::find_by_email(&mut conn, &email)? {
+            if !existing.is_active() {
+                // Update preferences and reactivate
+                let _updated_subscription = NewsletterRepository::update_preferences(
+                    &mut conn,
+                    &email,
+                    frequency.clone(),
+                    preferred_languages
+                        .clone()
+                        .map(|langs| langs.into_iter().map(Some).collect()),
+                    tech_stack_interests
+                        .clone()
+                        .map(|interests| interests.into_iter().map(Some).collect()),
+                )?;
+                let reactivated = NewsletterRepository::reactivate_by_email(&mut conn, &email)?;
+                return Ok(reactivated);
+            }
+        }
+
+        // Create new subscription with preferences
+        let mut new_subscription = NewNewsletterSubscription::new(email);
+        new_subscription.user_id = user_id;
+        new_subscription.frequency = frequency;
+        new_subscription.preferred_languages =
+            preferred_languages.map(|langs| langs.into_iter().map(Some).collect());
+        new_subscription.tech_stack_interests =
+            tech_stack_interests.map(|interests| interests.into_iter().map(Some).collect());
+
+        let subscription = NewsletterRepository::create(&mut conn, new_subscription)?;
+
+        log::info!(
+            "New newsletter subscription with preferences created: {}",
+            subscription.email
+        );
+        Ok(subscription)
+    }
+
+    /// Update subscription preferences
+    pub async fn update_preferences(
+        &self,
+        email: &str,
+        frequency: Option<String>,
+        preferred_languages: Option<Vec<String>>,
+        tech_stack_interests: Option<Vec<String>>,
+    ) -> Result<NewsletterSubscription, NewsletterServiceError> {
+        let mut conn = self.db_pool.get()?;
+
+        let updated_subscription = NewsletterRepository::update_preferences(
+            &mut conn,
+            email,
+            frequency,
+            preferred_languages.map(|langs| langs.into_iter().map(Some).collect()),
+            tech_stack_interests.map(|interests| interests.into_iter().map(Some).collect()),
+        )?;
+
+        log::info!("Newsletter preferences updated for: {}", email);
+        Ok(updated_subscription)
+    }
+
+    /// Send personalized newsletter to specific segment
+    pub async fn send_personalized_newsletter(
+        &mut self,
+        segment_id: Option<String>,
+        test_id: Option<String>,
+    ) -> Result<PersonalizedNewsletterResult, NewsletterServiceError> {
+        log::info!("Starting personalized newsletter generation and sending");
+
+        // Get repositories for personalization
+        let repositories = self.get_repositories_for_newsletter(20).await?;
+
+        if repositories.is_empty() {
+            log::warn!("No repositories found for personalized newsletter");
+            return Ok(PersonalizedNewsletterResult::new());
+        }
+
+        // Get subscriptions based on segment
+        let subscriptions = if let Some(segment_id) = segment_id {
+            self.get_subscriptions_by_segment(&segment_id).await?
+        } else {
+            self.get_active_subscriptions(None, None).await?
+        };
+
+        if subscriptions.is_empty() {
+            log::info!("No active subscriptions found for segment");
+            return Ok(PersonalizedNewsletterResult::new());
+        }
+
+        let mut result = PersonalizedNewsletterResult::new();
+        let (week_start, week_end) = self.get_current_week_dates();
+
+        for subscription in subscriptions {
+            // Create personalization preferences from subscription
+            let preferences = self
+                .create_personalization_preferences(&subscription)
+                .await?;
+
+            // Personalize content for this user
+            let personalized_content = self
+                .personalization_engine
+                .personalize_content(repositories.clone(), &preferences)?;
+
+            // Handle A/B testing if test is active
+            let (subject, template_config) = if let Some(test_id) = &test_id {
+                self.handle_ab_testing(test_id, &subscription).await?
+            } else {
+                (
+                    format!(
+                        "🚀 Your Personalized GitHub Trending - {} to {}",
+                        week_start, week_end
+                    ),
+                    HashMap::new(),
+                )
+            };
+
+            // Generate personalized newsletter content
+            let unsubscribe_url = format!(
+                "{}/newsletter/unsubscribe/{}",
+                self.base_url, subscription.unsubscribe_token
+            );
+
+            let html_content = self.template.render_personalized_html_newsletter(
+                &personalized_content.repositories,
+                &unsubscribe_url,
+                &week_start,
+                &week_end,
+                &personalized_content.segment,
+                &personalized_content.reasons,
+                &template_config,
+            )?;
+
+            let text_content = self.template.render_personalized_text_newsletter(
+                &personalized_content.repositories,
+                &unsubscribe_url,
+                &week_start,
+                &week_end,
+                &personalized_content.segment,
+                &personalized_content.reasons,
+            )?;
+
+            // Send personalized newsletter
+            match self
+                .email_client
+                .send_newsletter(
+                    &subscription.email,
+                    &subject,
+                    &html_content,
+                    &text_content,
+                    &unsubscribe_url,
+                )
+                .await
+            {
+                Ok(_) => {
+                    result.successful_sends.push(subscription.email.clone());
+                    result.personalization_scores.insert(
+                        subscription.email.clone(),
+                        personalized_content.personalization_score,
+                    );
+
+                    // Record A/B test event if applicable
+                    if let Some(test_id) = &test_id {
+                        let assignment = self
+                            .ab_testing_framework
+                            .get_user_assignment(&subscription.email)
+                            .cloned();
+
+                        if let Some(assignment) = assignment {
+                            let mut event_data = HashMap::new();
+                            event_data.insert(
+                                "personalization_score".to_string(),
+                                serde_json::Value::Number(
+                                    serde_json::Number::from_f64(
+                                        personalized_content.personalization_score,
+                                    )
+                                    .unwrap(),
+                                ),
+                            );
+
+                            self.ab_testing_framework.record_event(
+                                test_id,
+                                &assignment.variant_id,
+                                subscription.user_id,
+                                &subscription.email,
+                                EventType::EmailSent,
+                                event_data,
+                            )?;
+                        }
+                    }
+
+                    // Update engagement score and last sent timestamp
+                    self.update_engagement_metrics(&subscription.email, 0.1)
+                        .await?;
+                }
+                Err(e) => {
+                    log::warn!(
+                        "Failed to send personalized newsletter to {}: {}",
+                        subscription.email,
+                        e
+                    );
+                    result
+                        .failed_sends
+                        .push((subscription.email, e.to_string()));
+                }
+            }
+
+            // Add delay to avoid rate limiting
+            tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+        }
+
+        log::info!(
+            "Personalized newsletter sending completed: {} successful, {} failed",
+            result.successful_sends.len(),
+            result.failed_sends.len()
+        );
+
+        Ok(result)
+    }
+
+    /// Get subscriptions by user segment
+    pub async fn get_subscriptions_by_segment(
+        &self,
+        segment_id: &str,
+    ) -> Result<Vec<NewsletterSubscription>, NewsletterServiceError> {
+        let all_subscriptions = self.get_active_subscriptions(None, None).await?;
+        let mut segmented_subscriptions = Vec::new();
+
+        for subscription in all_subscriptions {
+            let preferences = self
+                .create_personalization_preferences(&subscription)
+                .await?;
+            let user_segment = self
+                .personalization_engine
+                .determine_user_segment(&preferences)?;
+
+            if user_segment.id == segment_id {
+                segmented_subscriptions.push(subscription);
+            }
+        }
+
+        Ok(segmented_subscriptions)
+    }
+
+    /// Create A/B test for newsletter campaigns
+    pub async fn create_newsletter_ab_test(
+        &mut self,
+        test: ABTest,
+    ) -> Result<String, NewsletterServiceError> {
+        let test_id = self.ab_testing_framework.create_test(test)?;
+        Ok(test_id)
+    }
+
+    /// Start A/B test
+    pub async fn start_ab_test(&mut self, test_id: &str) -> Result<(), NewsletterServiceError> {
+        self.ab_testing_framework.start_test(test_id)?;
+        Ok(())
+    }
+
+    /// Get A/B test results
+    pub async fn get_ab_test_results(
+        &self,
+        test_id: &str,
+    ) -> Result<crate::services::ab_testing::TestResults, NewsletterServiceError> {
+        let results = self.ab_testing_framework.analyze_test_results(test_id)?;
+        Ok(results)
+    }
+
+    /// Get user segments and statistics
+    pub async fn get_user_segments(&self) -> Result<Vec<UserSegmentStats>, NewsletterServiceError> {
+        let subscriptions = self.get_active_subscriptions(None, None).await?;
+        let mut segment_stats = HashMap::new();
+
+        for subscription in subscriptions {
+            let preferences = self
+                .create_personalization_preferences(&subscription)
+                .await?;
+            let segment = self
+                .personalization_engine
+                .determine_user_segment(&preferences)?;
+
+            let stats = segment_stats
+                .entry(segment.id.clone())
+                .or_insert(UserSegmentStats {
+                    segment,
+                    user_count: 0,
+                    avg_engagement_score: 0.0,
+                    total_engagement: 0.0,
+                });
+
+            stats.user_count += 1;
+            stats.total_engagement += subscription.engagement_score.unwrap_or(0.0);
+            stats.avg_engagement_score = stats.total_engagement / stats.user_count as f64;
+        }
+
+        Ok(segment_stats.into_values().collect())
+    }
+
+    /// Create personalization preferences from subscription
+    async fn create_personalization_preferences(
+        &self,
+        subscription: &NewsletterSubscription,
+    ) -> Result<PersonalizationPreferences, NewsletterServiceError> {
+        let preferred_languages = subscription
+            .preferred_languages
+            .as_ref()
+            .map(|langs| langs.iter().filter_map(|l| l.clone()).collect())
+            .unwrap_or_default();
+
+        let tech_stack_interests = subscription
+            .tech_stack_interests
+            .as_ref()
+            .map(|interests| interests.iter().filter_map(|i| i.clone()).collect())
+            .unwrap_or_default();
+
+        Ok(PersonalizationPreferences {
+            preferred_languages,
+            tech_stack_interests,
+            frequency: subscription
+                .frequency
+                .clone()
+                .unwrap_or_else(|| "weekly".to_string()),
+            engagement_score: subscription.engagement_score.unwrap_or(0.5),
+            user_id: subscription.user_id,
+            signup_date: subscription
+                .subscribed_at
+                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
+        })
+    }
+
+    /// Handle A/B testing for newsletter
+    async fn handle_ab_testing(
+        &mut self,
+        test_id: &str,
+        subscription: &NewsletterSubscription,
+    ) -> Result<(String, HashMap<String, serde_json::Value>), NewsletterServiceError> {
+        // Assign user to test variant
+        let assignment = self.ab_testing_framework.assign_user_to_test(
+            test_id,
+            subscription.user_id,
+            &subscription.email,
+        )?;
+
+        // Get test configuration
+        let test = self.ab_testing_framework.get_test(test_id).ok_or_else(|| {
+            NewsletterServiceError::ABTestError(ABTestError::TestNotFound(test_id.to_string()))
+        })?;
+
+        // Find variant configuration
+        let variant = test
+            .variants
+            .iter()
+            .find(|v| v.id == assignment.variant_id)
+            .ok_or_else(|| {
+                NewsletterServiceError::ABTestError(ABTestError::InvalidConfiguration(
+                    "Variant not found".to_string(),
+                ))
+            })?;
+
+        // Extract subject line and template configuration
+        let subject = variant
+            .configuration
+            .subject_line
+            .clone()
+            .unwrap_or_else(|| "🚀 GitHub Trending Weekly".to_string());
+
+        let mut template_config = HashMap::new();
+        if let Some(repo_count) = variant.configuration.repository_count {
+            template_config.insert(
+                "repository_count".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(repo_count)),
+            );
+        }
+        if let Some(include_social_proof) = variant.configuration.include_social_proof {
+            template_config.insert(
+                "include_social_proof".to_string(),
+                serde_json::Value::Bool(include_social_proof),
+            );
+        }
+        if let Some(cta_text) = &variant.configuration.cta_text {
+            template_config.insert(
+                "cta_text".to_string(),
+                serde_json::Value::String(cta_text.clone()),
+            );
+        }
+
+        Ok((subject, template_config))
+    }
+
+    /// Update engagement metrics for a user
+    async fn update_engagement_metrics(
+        &self,
+        email: &str,
+        engagement_delta: f64,
+    ) -> Result<(), NewsletterServiceError> {
+        let mut conn = self.db_pool.get()?;
+        NewsletterRepository::update_engagement_score(&mut conn, email, engagement_delta)?;
+        Ok(())
+    }
+
+    /// Get repositories for newsletter with enhanced filtering
+    async fn get_repositories_for_newsletter(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<Repository>, NewsletterServiceError> {
+        let end_date = Utc::now().date_naive();
+        let start_date = end_date - Duration::days(7);
+
+        let filters = RepositoryFilters {
+            language: None,
+            min_stars: Some(5), // Lower threshold for more variety
+            max_stars: None,
+            date_from: Some(start_date),
+            date_to: Some(end_date),
+            limit: Some(limit as i64),
+            offset: None,
+        };
+
+        let mut repositories = self
+            .repository_service
+            .get_trending_repositories(filters)
+            .await?;
+
+        // Sort by stars descending and take top N
+        repositories.sort_by(|a, b| b.stars.cmp(&a.stars));
+        repositories.truncate(limit);
+
+        Ok(repositories)
+    }
+
+    /// Create a newsletter campaign for analytics tracking
+    pub async fn create_campaign(
+        &mut self,
+        name: String,
+        subject_line: String,
+        template_version: String,
+        segment_criteria: Option<serde_json::Value>,
+    ) -> Result<String, NewsletterServiceError> {
+        let campaign_id = self.analytics_service.create_campaign(
+            name,
+            subject_line,
+            template_version,
+            segment_criteria,
+        )?;
+        Ok(campaign_id)
+    }
+
+    /// Track email engagement event
+    #[allow(clippy::too_many_arguments)]
+    pub async fn track_engagement(
+        &mut self,
+        campaign_id: String,
+        email: String,
+        user_id: Option<i64>,
+        event_type: EngagementEventType,
+        event_data: std::collections::HashMap<String, serde_json::Value>,
+        user_agent: Option<String>,
+        ip_address: Option<String>,
+    ) -> Result<String, NewsletterServiceError> {
+        let engagement_id = self.analytics_service.track_engagement(
+            campaign_id,
+            email,
+            user_id,
+            event_type,
+            event_data,
+            user_agent,
+            ip_address,
+        )?;
+        Ok(engagement_id)
+    }
+
+    /// Generate UTM parameters for newsletter links
+    pub async fn generate_utm_parameters(
+        &self,
+        campaign_id: &str,
+        link_identifier: &str,
+    ) -> Result<UTMParameters, NewsletterServiceError> {
+        let utm_params = self
+            .analytics_service
+            .generate_utm_parameters(campaign_id, link_identifier)?;
+        Ok(utm_params)
+    }
+
+    /// Add UTM tracking to a URL
+    pub async fn add_utm_tracking_to_url(
+        &self,
+        base_url: &str,
+        utm_params: &UTMParameters,
+    ) -> Result<String, NewsletterServiceError> {
+        let tracked_url = self
+            .analytics_service
+            .add_utm_to_url(base_url, utm_params)?;
+        Ok(tracked_url)
+    }
+
+    /// Get comprehensive analytics for a campaign
+    pub async fn get_campaign_analytics(
+        &self,
+        campaign_id: &str,
+    ) -> Result<CampaignAnalytics, NewsletterServiceError> {
+        let analytics = self.analytics_service.get_campaign_analytics(campaign_id)?;
+        Ok(analytics)
+    }
+
+    /// Get analytics for all campaigns
+    pub async fn get_all_campaigns_analytics(&self) -> Vec<CampaignAnalytics> {
+        self.analytics_service.get_all_campaigns_analytics()
+    }
+
+    /// Compare multiple campaigns
+    pub async fn compare_campaigns(
+        &self,
+        campaign_ids: Vec<String>,
+    ) -> Result<crate::services::newsletter_analytics::CampaignComparison, NewsletterServiceError>
+    {
+        let comparison = self.analytics_service.compare_campaigns(campaign_ids)?;
+        Ok(comparison)
+    }
+
+    /// Get segment performance analytics
+    pub async fn get_segment_performance(
+        &self,
+    ) -> Vec<crate::services::newsletter_analytics::SegmentPerformance> {
+        self.analytics_service.get_segment_performance()
+    }
+
+    /// Get optimization recommendations for a segment
+    pub async fn get_optimization_recommendations(
+        &self,
+        segment_id: &str,
+    ) -> Result<Vec<String>, NewsletterServiceError> {
+        let recommendations = self
+            .analytics_service
+            .get_optimization_recommendations(segment_id)?;
+        Ok(recommendations)
+    }
+
+    /// Send newsletter with analytics tracking
+    pub async fn send_tracked_newsletter(
+        &mut self,
+        campaign_name: String,
+        subject_line: String,
+        segment_id: Option<String>,
+        test_id: Option<String>,
+    ) -> Result<TrackedNewsletterResult, NewsletterServiceError> {
+        log::info!("Starting tracked newsletter campaign: {}", campaign_name);
+
+        // Create campaign for tracking
+        let segment_criteria = segment_id
+            .as_ref()
+            .map(|id| serde_json::json!({ "segment_id": id }));
+
+        let campaign_id = self.analytics_service.create_campaign(
+            campaign_name.clone(),
+            subject_line.clone(),
+            "v1.0".to_string(),
+            segment_criteria,
+        )?;
+
+        // Get repositories for newsletter
+        let repositories = self.get_repositories_for_newsletter(20).await?;
+
+        if repositories.is_empty() {
+            log::warn!("No repositories found for tracked newsletter");
+            return Ok(TrackedNewsletterResult::new(campaign_id));
+        }
+
+        // Get subscriptions based on segment
+        let subscriptions = if let Some(segment_id) = segment_id {
+            self.get_subscriptions_by_segment(&segment_id).await?
+        } else {
+            self.get_active_subscriptions(None, None).await?
+        };
+
+        if subscriptions.is_empty() {
+            log::info!("No active subscriptions found for segment");
+            return Ok(TrackedNewsletterResult::new(campaign_id));
+        }
+
+        // Mark campaign as sent
+        self.analytics_service
+            .mark_campaign_sent(&campaign_id, subscriptions.len() as i32)?;
+
+        let mut result = TrackedNewsletterResult::new(campaign_id.clone());
+        let (week_start, week_end) = self.get_current_week_dates();
+
+        for subscription in subscriptions {
+            // Create personalization preferences from subscription
+            let preferences = self
+                .create_personalization_preferences(&subscription)
+                .await?;
+
+            // Personalize content for this user
+            let personalized_content = self
+                .personalization_engine
+                .personalize_content(repositories.clone(), &preferences)?;
+
+            // Handle A/B testing if test is active
+            let (final_subject, template_config) = if let Some(test_id) = &test_id {
+                self.handle_ab_testing(test_id, &subscription).await?
+            } else {
+                (subject_line.clone(), std::collections::HashMap::new())
+            };
+
+            // Generate UTM parameters for tracking
+            let utm_params = self
+                .analytics_service
+                .generate_utm_parameters(&campaign_id, "newsletter")?;
+
+            // Generate newsletter content with UTM tracking
+            let unsubscribe_url = format!(
+                "{}/newsletter/unsubscribe/{}",
+                self.base_url, subscription.unsubscribe_token
+            );
+
+            let tracked_unsubscribe_url = self
+                .analytics_service
+                .add_utm_to_url(&unsubscribe_url, &utm_params)?;
+
+            let html_content = self.template.render_personalized_html_newsletter(
+                &personalized_content.repositories,
+                &tracked_unsubscribe_url,
+                &week_start,
+                &week_end,
+                &personalized_content.segment,
+                &personalized_content.reasons,
+                &template_config,
+            )?;
+
+            let text_content = self.template.render_personalized_text_newsletter(
+                &personalized_content.repositories,
+                &tracked_unsubscribe_url,
+                &week_start,
+                &week_end,
+                &personalized_content.segment,
+                &personalized_content.reasons,
+            )?;
+
+            // Send newsletter
+            match self
+                .email_client
+                .send_newsletter(
+                    &subscription.email,
+                    &final_subject,
+                    &html_content,
+                    &text_content,
+                    &tracked_unsubscribe_url,
+                )
+                .await
+            {
+                Ok(_) => {
+                    result.successful_sends.push(subscription.email.clone());
+                    result.personalization_scores.insert(
+                        subscription.email.clone(),
+                        personalized_content.personalization_score,
+                    );
+
+                    // Track sent event
+                    self.analytics_service.track_engagement(
+                        campaign_id.clone(),
+                        subscription.email.clone(),
+                        subscription.user_id,
+                        EngagementEventType::Sent,
+                        std::collections::HashMap::new(),
+                        None,
+                        None,
+                    )?;
+
+                    // Record A/B test event if applicable
+                    if let Some(test_id) = &test_id {
+                        let assignment_variant = self
+                            .ab_testing_framework
+                            .get_user_assignment(&subscription.email)
+                            .map(|a| a.variant_id.clone());
+
+                        if let Some(variant_id) = assignment_variant {
+                            let mut event_data = std::collections::HashMap::new();
+                            event_data.insert(
+                                "campaign_id".to_string(),
+                                serde_json::Value::String(campaign_id.clone()),
+                            );
+                            event_data.insert(
+                                "personalization_score".to_string(),
+                                serde_json::Value::Number(
+                                    serde_json::Number::from_f64(
+                                        personalized_content.personalization_score,
+                                    )
+                                    .unwrap(),
+                                ),
+                            );
+
+                            self.ab_testing_framework.record_event(
+                                test_id,
+                                &variant_id,
+                                subscription.user_id,
+                                &subscription.email,
+                                EventType::EmailSent,
+                                event_data,
+                            )?;
+                        }
+                    }
+
+                    // Update engagement score and last sent timestamp
+                    self.update_engagement_metrics(&subscription.email, 0.1)
+                        .await?;
+                }
+                Err(e) => {
+                    log::warn!(
+                        "Failed to send tracked newsletter to {}: {}",
+                        subscription.email,
+                        e
+                    );
+                    result
+                        .failed_sends
+                        .push((subscription.email, e.to_string()));
+                }
+            }
+
+            // Add delay to avoid rate limiting
+            tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+        }
+
+        log::info!(
+            "Tracked newsletter campaign completed: {} successful, {} failed",
+            result.successful_sends.len(),
+            result.failed_sends.len()
+        );
+
+        Ok(result)
+    }
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -375,6 +1144,31 @@ pub struct NewsletterStatistics {
 pub struct NewsletterSendResult {
     pub successful_sends: Vec<String>,
     pub failed_sends: Vec<(String, String)>, // (email, error_message)
+    pub total_repositories: usize,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct PersonalizedNewsletterResult {
+    pub successful_sends: Vec<String>,
+    pub failed_sends: Vec<(String, String)>, // (email, error_message)
+    pub personalization_scores: HashMap<String, f64>, // email -> personalization_score
+    pub total_repositories: usize,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct UserSegmentStats {
+    pub segment: UserSegment,
+    pub user_count: usize,
+    pub avg_engagement_score: f64,
+    pub total_engagement: f64,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct TrackedNewsletterResult {
+    pub campaign_id: String,
+    pub successful_sends: Vec<String>,
+    pub failed_sends: Vec<(String, String)>, // (email, error_message)
+    pub personalization_scores: HashMap<String, f64>, // email -> personalization_score
     pub total_repositories: usize,
 }
 
@@ -403,6 +1197,85 @@ impl NewsletterSendResult {
             0.0
         } else {
             self.successful_sends.len() as f64 / total as f64
+        }
+    }
+}
+
+impl Default for PersonalizedNewsletterResult {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl PersonalizedNewsletterResult {
+    pub fn new() -> Self {
+        Self {
+            successful_sends: Vec::new(),
+            failed_sends: Vec::new(),
+            personalization_scores: HashMap::new(),
+            total_repositories: 0,
+        }
+    }
+
+    pub fn total_attempted(&self) -> usize {
+        self.successful_sends.len() + self.failed_sends.len()
+    }
+
+    pub fn success_rate(&self) -> f64 {
+        let total = self.total_attempted();
+        if total == 0 {
+            0.0
+        } else {
+            self.successful_sends.len() as f64 / total as f64
+        }
+    }
+
+    pub fn avg_personalization_score(&self) -> f64 {
+        if self.personalization_scores.is_empty() {
+            0.0
+        } else {
+            let total: f64 = self.personalization_scores.values().sum();
+            total / self.personalization_scores.len() as f64
+        }
+    }
+}
+
+impl Default for TrackedNewsletterResult {
+    fn default() -> Self {
+        Self::new("".to_string())
+    }
+}
+
+impl TrackedNewsletterResult {
+    pub fn new(campaign_id: String) -> Self {
+        Self {
+            campaign_id,
+            successful_sends: Vec::new(),
+            failed_sends: Vec::new(),
+            personalization_scores: HashMap::new(),
+            total_repositories: 0,
+        }
+    }
+
+    pub fn total_attempted(&self) -> usize {
+        self.successful_sends.len() + self.failed_sends.len()
+    }
+
+    pub fn success_rate(&self) -> f64 {
+        let total = self.total_attempted();
+        if total == 0 {
+            0.0
+        } else {
+            self.successful_sends.len() as f64 / total as f64
+        }
+    }
+
+    pub fn avg_personalization_score(&self) -> f64 {
+        if self.personalization_scores.is_empty() {
+            0.0
+        } else {
+            let total: f64 = self.personalization_scores.values().sum();
+            total / self.personalization_scores.len() as f64
         }
     }
 }

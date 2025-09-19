@@ -1,16 +1,29 @@
+pub mod ab_testing;
 pub mod alerting;
+pub mod auth_service;
 pub mod email_client;
 pub mod github_scraper;
 pub mod llm_client;
 pub mod logging;
 pub mod metrics;
+pub mod newsletter_analytics;
 pub mod newsletter_service;
 pub mod newsletter_template;
+pub mod personalization_engine;
+pub mod referral_service;
 pub mod repository_service;
 pub mod scheduler;
 pub mod service_manager;
 pub mod summary_service;
 
+#[cfg(test)]
+pub mod tests;
+
+#[allow(unused_imports)]
+pub use ab_testing::{
+    ABTest, ABTestError, ABTestingFramework, EventType, PersonalizationLevel, TestAssignment,
+    TestEvent, TestResults, TestStatus, TestVariant, VariantConfiguration, VariantResults,
+};
 #[allow(unused_imports)]
 pub use alerting::{
     Alert, AlertSeverity, AlertStatistics, AlertType, AlertingConfig, AlertingService,
@@ -26,11 +39,22 @@ pub use logging::{LogCategory, LogLevel, StructuredLogEntry, StructuredLogger};
 #[allow(unused_imports)]
 pub use metrics::{ApiMetrics, EndpointMetrics, JobMetrics, MetricsCollector, SystemMetrics};
 #[allow(unused_imports)]
+pub use newsletter_analytics::{
+    CampaignAnalytics, EmailEngagement, EngagementEventType, NewsletterAnalyticsError,
+    NewsletterAnalyticsService, NewsletterCampaign, UTMParameters,
+};
+#[allow(unused_imports)]
 pub use newsletter_service::{
     NewsletterSendResult, NewsletterService, NewsletterServiceError, NewsletterStatistics,
+    PersonalizedNewsletterResult, TrackedNewsletterResult, UserSegmentStats,
 };
 #[allow(unused_imports)]
 pub use newsletter_template::{NewsletterTemplate, TemplateError};
+#[allow(unused_imports)]
+pub use personalization_engine::{
+    PersonalizationEngine, PersonalizationError, PersonalizationPreferences, PersonalizedContent,
+    SegmentCriteria, UserSegment,
+};
 #[allow(unused_imports)]
 pub use repository_service::{
     RefreshResult, RepositoryService, RepositoryServiceError, RepositoryStatistics,

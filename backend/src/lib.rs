@@ -26,6 +26,8 @@ pub fn rocket() -> Rocket<Build> {
         .mount("/api", routes::repositories::routes())
         .mount("/api", routes::newsletter::routes())
         .mount("/api", routes::admin::routes())
+        .mount("/api", routes::auth::routes())
+        .mount("/api", routes::referral::routes())
 }
 
 /// Rocket fairing for services initialization

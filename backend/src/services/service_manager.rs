@@ -1,7 +1,9 @@
 use crate::database::DbPool;
+use crate::repositories::user_repo::UserRepository;
 use crate::services::{
-    AlertingConfig, AlertingService, MetricsCollector, NewsletterService, NewsletterServiceError,
-    RepositoryService, RepositoryServiceError, SchedulerError, SchedulerService,
+    auth_service::AuthService, referral_service::ReferralService, AlertingConfig, AlertingService,
+    MetricsCollector, NewsletterService, NewsletterServiceError, RepositoryService,
+    RepositoryServiceError, SchedulerError, SchedulerService,
 };
 use std::sync::Arc;
 use thiserror::Error;
@@ -22,6 +24,9 @@ pub struct ServiceManager {
     pub scheduler_service: Arc<tokio::sync::Mutex<SchedulerService>>,
     pub metrics_collector: Arc<MetricsCollector>,
     pub alerting_service: Arc<AlertingService>,
+    pub auth_service: Arc<AuthService>,
+    pub user_repository: Arc<UserRepository>,
+    pub referral_service: Arc<ReferralService>,
 }
 
 impl ServiceManager {
@@ -32,6 +37,15 @@ impl ServiceManager {
             repository_service.clone(),
         )?);
         let metrics_collector = Arc::new(MetricsCollector::new());
+
+        // Initialize user repository and auth service
+        let user_repository = Arc::new(UserRepository::new(db_pool.clone()));
+        let auth_service = Arc::new(AuthService::new(user_repository.clone()).map_err(|e| {
+            ServiceManagerError::RepositoryServiceError(RepositoryServiceError::ValidationError(
+                e.to_string(),
+            ))
+        })?);
+        let referral_service = Arc::new(ReferralService::new(user_repository.clone()));
 
         // Initialize alerting service with configuration from environment
         let alerting_config = AlertingConfig {
@@ -68,6 +82,9 @@ impl ServiceManager {
             scheduler_service,
             metrics_collector,
             alerting_service,
+            auth_service,
+            user_repository,
+            referral_service,
         })
     }
 
