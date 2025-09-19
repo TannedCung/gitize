@@ -33,12 +33,18 @@ interface RepositoryCardProps extends BaseComponentProps {
   repository: Repository;
   showSummary?: boolean;
   summaryState?: SummaryState;
+  compact?: boolean;
+  extensionMode?: boolean;
+  onRepositoryClick?: (_repository: Repository) => void;
 }
 
 export function RepositoryCard({
   repository,
   showSummary = true,
   summaryState,
+  compact = false,
+  extensionMode = false,
+  onRepositoryClick,
   className,
   ...props
 }: RepositoryCardProps) {
@@ -96,29 +102,48 @@ export function RepositoryCard({
     return text.length > 200 ? `${text.substring(0, 200)}...` : text;
   };
 
+  const handleClick = () => {
+    if (onRepositoryClick) {
+      onRepositoryClick(repository);
+    }
+  };
+
   return (
     <article
       className={cn(
         // Flat design - no shadows, minimal borders, clean background
         'bg-neutral-white dark:bg-neutral-900',
-        // Generous padding for airy layout
-        'p-8 sm:p-12',
+        // Conditional padding based on compact mode
+        compact ? 'p-4' : 'p-8 sm:p-12',
         // Subtle hover state with minimal visual change
         'hover:bg-neutral-50 dark:hover:bg-neutral-800/50',
         // Smooth transitions for interaction feedback
         'transition-colors duration-200 ease-in-out',
         // Touch-friendly interaction
         'touch-manipulation',
+        // Add cursor pointer if clickable
+        onRepositoryClick && 'cursor-pointer',
         className
       )}
       data-testid={`repository-card-${repository.id}`}
+      onClick={extensionMode ? handleClick : undefined}
       {...props}
     >
-      {/* Header - Typography-first hierarchy with generous spacing */}
-      <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-8 space-y-4 sm:space-y-0">
+      {/* Header - Typography-first hierarchy with conditional spacing */}
+      <header
+        className={cn(
+          'flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0',
+          compact ? 'mb-3' : 'mb-8'
+        )}
+      >
         <div className="flex-1 min-w-0">
           {/* Repository name with clean typography hierarchy */}
-          <h3 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-white leading-tight">
+          <h3
+            className={cn(
+              'font-semibold text-neutral-900 dark:text-neutral-white leading-tight',
+              compact ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl'
+            )}
+          >
             <a
               href={repository.url}
               target="_blank"
@@ -132,20 +157,39 @@ export function RepositoryCard({
                 'dark:focus:ring-offset-neutral-900 rounded-sm'
               )}
               aria-label={`Visit ${repository.name} repository on GitHub`}
+              onClick={extensionMode ? e => e.stopPropagation() : undefined}
             >
               {repository.name}
             </a>
           </h3>
           {/* Author with subtle typography */}
-          <p className="text-base text-neutral-600 dark:text-neutral-400 break-words mt-3 leading-relaxed">
+          <p
+            className={cn(
+              'text-neutral-600 dark:text-neutral-400 break-words leading-relaxed',
+              compact ? 'text-sm mt-1' : 'text-base mt-3'
+            )}
+          >
             by {repository.author}
           </p>
         </div>
-        {/* Stats with generous spacing and minimal visual weight */}
-        <div className="flex items-center space-x-6 sm:space-x-8 sm:ml-8 flex-shrink-0">
-          <div className="flex items-center space-x-2 text-base text-neutral-600 dark:text-neutral-400">
+        {/* Stats with conditional spacing and minimal visual weight */}
+        <div
+          className={cn(
+            'flex items-center flex-shrink-0',
+            compact ? 'space-x-4 sm:ml-4' : 'space-x-6 sm:space-x-8 sm:ml-8'
+          )}
+        >
+          <div
+            className={cn(
+              'flex items-center space-x-2 text-neutral-600 dark:text-neutral-400',
+              compact ? 'text-sm' : 'text-base'
+            )}
+          >
             <StarIconSolid
-              className="h-5 w-5 text-accent-amber-500 flex-shrink-0"
+              className={cn(
+                'text-accent-amber-500 flex-shrink-0',
+                compact ? 'h-4 w-4' : 'h-5 w-5'
+              )}
               aria-hidden="true"
             />
             <span
@@ -155,9 +199,14 @@ export function RepositoryCard({
               {formatNumber(repository.stars)}
             </span>
           </div>
-          <div className="flex items-center space-x-2 text-base text-neutral-600 dark:text-neutral-400">
+          <div
+            className={cn(
+              'flex items-center space-x-2 text-neutral-600 dark:text-neutral-400',
+              compact ? 'text-sm' : 'text-base'
+            )}
+          >
             <CodeBracketIcon
-              className="h-5 w-5 flex-shrink-0"
+              className={cn('flex-shrink-0', compact ? 'h-4 w-4' : 'h-5 w-5')}
               aria-hidden="true"
             />
             <span
@@ -170,10 +219,13 @@ export function RepositoryCard({
         </div>
       </header>
 
-      {/* Description - Enhanced typography with generous spacing */}
+      {/* Description - Enhanced typography with conditional spacing */}
       {repository.description && (
         <p
-          className="text-neutral-700 dark:text-neutral-300 text-lg mb-8 line-clamp-3 leading-relaxed"
+          className={cn(
+            'text-neutral-700 dark:text-neutral-300 leading-relaxed',
+            compact ? 'text-sm mb-3 line-clamp-2' : 'text-lg mb-8 line-clamp-3'
+          )}
           aria-label="Repository description"
         >
           {repository.description}
@@ -182,7 +234,7 @@ export function RepositoryCard({
 
       {/* AI Summary - Flat design with typography-based organization */}
       {showSummary && (
-        <div className="mb-8">
+        <div className={compact ? 'mb-3' : 'mb-8'}>
           {/* Summary Loading State */}
           {summaryState?.isLoading && (
             <Alert
@@ -274,13 +326,28 @@ export function RepositoryCard({
         </div>
       )}
 
-      {/* Footer - Typography-based separation with generous spacing */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-base space-y-4 sm:space-y-0 pt-8">
-        <div className="flex items-center space-x-6">
+      {/* Footer - Typography-based separation with conditional spacing */}
+      <div
+        className={cn(
+          'flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0',
+          compact ? 'text-sm pt-3' : 'text-base pt-8'
+        )}
+      >
+        <div
+          className={cn(
+            'flex items-center',
+            compact ? 'space-x-4' : 'space-x-6'
+          )}
+        >
           {repository.language && (
-            <div className="flex items-center space-x-3">
+            <div
+              className={cn(
+                'flex items-center',
+                compact ? 'space-x-2' : 'space-x-3'
+              )}
+            >
               <div
-                className="w-4 h-4 flex-shrink-0"
+                className={cn('flex-shrink-0', compact ? 'w-3 h-3' : 'w-4 h-4')}
                 style={{
                   backgroundColor: getLanguageColor(repository.language),
                 }}
@@ -292,7 +359,12 @@ export function RepositoryCard({
             </div>
           )}
         </div>
-        <span className="text-neutral-500 dark:text-neutral-500 text-sm sm:text-base font-medium">
+        <span
+          className={cn(
+            'text-neutral-500 dark:text-neutral-500 font-medium',
+            compact ? 'text-xs' : 'text-sm sm:text-base'
+          )}
+        >
           Trending {formatDate(repository.trending_date)}
         </span>
       </div>

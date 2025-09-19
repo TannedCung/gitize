@@ -18,6 +18,7 @@
 /frontend/out/
 /frontend/build/
 /frontend/dist/
+/frontend/storybook-static/
 
 # Logs
 *.log
@@ -151,3 +152,5 @@ Cargo.lock
 .kiro/cache/
 .kiro/logs/
 .kiro/
+
+scripts/

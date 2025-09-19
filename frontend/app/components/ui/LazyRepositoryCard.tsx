@@ -10,12 +10,18 @@ interface LazyRepositoryCardProps extends BaseComponentProps {
   repository: Repository;
   showSummary?: boolean;
   summaryState?: SummaryState;
+  compact?: boolean;
+  extensionMode?: boolean;
+  onRepositoryClick?: (_repository: Repository) => void;
 }
 
 export function LazyRepositoryCard({
   repository,
   showSummary = true,
   summaryState,
+  compact,
+  extensionMode,
+  onRepositoryClick,
   className,
   'data-testid': dataTestId,
   ...props
@@ -71,6 +77,9 @@ export function LazyRepositoryCard({
         repository={repository}
         showSummary={showSummary}
         summaryState={summaryState}
+        compact={compact}
+        extensionMode={extensionMode}
+        onRepositoryClick={onRepositoryClick}
         className={className}
         data-testid={dataTestId}
         {...props}
