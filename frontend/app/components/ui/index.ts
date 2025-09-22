@@ -5,6 +5,7 @@ export * from './core';
 export { RepositoryCard } from './RepositoryCard';
 export { LazyRepositoryCard } from './LazyRepositoryCard';
 export { SearchBar } from './SearchBar';
+export { CacheStatusIndicator } from './CacheStatusIndicator';
 
 // Toast system (frequently used)
 export { Toast, ToastContainer, useToast } from './Toast';
