@@ -10,6 +10,7 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:extension": "jest --testPathPatterns=extension --verbose",
     "test:integration": "jest --testPathPatterns=integration.test.tsx --verbose",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

@@ -20,8 +20,12 @@ export function CacheStatusIndicator({
       if (!isExtensionEnvironment) return;
 
       try {
-        const result = await chrome.storage.local.get('last_fetch_timestamp');
-        setLastFetchTime(result.last_fetch_timestamp || null);
+        // Type assertion for Chrome API in extension environment
+        const chromeStorage = (globalThis as any).chrome?.storage;
+        if (chromeStorage) {
+          const result = await chromeStorage.local.get('last_fetch_timestamp');
+          setLastFetchTime(result.last_fetch_timestamp || null);
+        }
       } catch (error) {
         console.warn('Error getting last fetch time:', error);
       }

@@ -36,8 +36,8 @@ interface CachedSearchData {
 const isExtensionEnvironment = (): boolean => {
   return (
     typeof window !== 'undefined' &&
-    typeof window.chrome !== 'undefined' &&
-    typeof window.chrome.storage !== 'undefined'
+    typeof (window as any).chrome !== 'undefined' &&
+    typeof (window as any).chrome.storage !== 'undefined'
   );
 };
 
@@ -47,7 +47,8 @@ const chromeStorage = {
     if (!isExtensionEnvironment()) return null;
 
     try {
-      const result = await chrome.storage.local.get(key);
+      const chromeApi = (globalThis as any).chrome;
+      const result = await chromeApi.storage.local.get(key);
       return result[key] || null;
     } catch (error) {
       console.warn('Chrome storage get error:', error);
@@ -59,7 +60,8 @@ const chromeStorage = {
     if (!isExtensionEnvironment()) return;
 
     try {
-      await chrome.storage.local.set({ [key]: value });
+      const chromeApi = (globalThis as any).chrome;
+      await chromeApi.storage.local.set({ [key]: value });
     } catch (error) {
       console.warn('Chrome storage set error:', error);
     }
@@ -69,7 +71,8 @@ const chromeStorage = {
     if (!isExtensionEnvironment()) return;
 
     try {
-      await chrome.storage.local.remove(key);
+      const chromeApi = (globalThis as any).chrome;
+      await chromeApi.storage.local.remove(key);
     } catch (error) {
       console.warn('Chrome storage remove error:', error);
     }
