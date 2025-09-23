@@ -6,6 +6,7 @@ export { RepositoryCard } from './RepositoryCard';
 export { LazyRepositoryCard } from './LazyRepositoryCard';
 export { SearchBar } from './SearchBar';
 export { CacheStatusIndicator } from './CacheStatusIndicator';
+export { VerticalFeed, useFeedContext } from './VerticalFeed';
 
 // Toast system (frequently used)
 export { Toast, ToastContainer, useToast } from './Toast';
@@ -31,6 +32,7 @@ export {
 
 // Application-specific types
 export type { Repository } from './RepositoryCard';
+export type { VerticalFeedProps } from './VerticalFeed';
 
 // Toast types
 export type { ToastProps, ToastConfig, ToastPosition } from './Toast';
