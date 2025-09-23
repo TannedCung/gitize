@@ -5,6 +5,9 @@
 /* Import optimized theme transitions */
 @import './styles/theme-transitions.css';
 
+/* Import vertical feed transitions */
+@import './styles/vertical-feed-transitions.css';
+
 /* CSS Custom Properties for Flat Minimalist Design Tokens */
 :root {
   /* Flat minimalist color palette */

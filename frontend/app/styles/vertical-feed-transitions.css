@@ -1,0 +1,162 @@
+/* Vertical Feed Transitions */
+
+/* CSS Custom Properties for Feed Transitions */
+:root {
+  --feed-transition-duration: 400ms;
+  --feed-transition-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --feed-snap-threshold: 50vh;
+  --feed-viewport-height: 100vh;
+  --feed-viewport-width: 100vw;
+}
+
+/* Feed Viewport Container */
+.vertical-feed-viewport {
+  height: var(--feed-viewport-height);
+  width: var(--feed-viewport-width);
+  overflow: hidden;
+  position: relative;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  /* Prevent default scrolling */
+  overscroll-behavior: none;
+  /* Optimize for touch */
+  touch-action: pan-y;
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Repository Slide Base */
+.repository-slide {
+  height: var(--feed-viewport-height);
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  scroll-snap-align: start;
+  /* Use transform for smooth transitions */
+  transform: translateY(var(--slide-offset, 0));
+  transition: transform var(--feed-transition-duration)
+    var(--feed-transition-easing);
+  /* Hardware acceleration */
+  will-change: transform;
+  backface-visibility: hidden;
+  /* Optimize rendering */
+  contain: layout style paint;
+}
+
+/* Slide States */
+.repository-slide.slide-active {
+  --slide-offset: 0;
+  z-index: 10;
+}
+
+.repository-slide.slide-next {
+  --slide-offset: 100vh;
+  z-index: 5;
+}
+
+.repository-slide.slide-previous {
+  --slide-offset: -100vh;
+  z-index: 5;
+}
+
+.repository-slide.slide-hidden {
+  --slide-offset: 200vh;
+  z-index: 1;
+}
+
+/* Transition States */
+.repository-slide.transitioning {
+  transition-duration: var(--feed-transition-duration);
+}
+
+.repository-slide.no-transition {
+  transition: none;
+}
+
+/* Smooth Snap-to-Viewport Behavior */
+.repository-slide.snap-to-viewport {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Performance Optimizations */
+.repository-slide.optimized {
+  /* GPU acceleration */
+  transform: translate3d(0, var(--slide-offset, 0), 0);
+  /* Optimize compositing */
+  isolation: isolate;
+  /* Reduce repaints */
+  contain: strict;
+}
+
+/* Direction-based Transitions */
+.feed-transitioning-down .repository-slide {
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.feed-transitioning-up .repository-slide {
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Velocity-based Transitions */
+.feed-fast-transition .repository-slide {
+  transition-duration: 300ms;
+}
+
+.feed-slow-transition .repository-slide {
+  transition-duration: 500ms;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .vertical-feed-viewport {
+    /* Better touch handling on mobile */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+
+  .repository-slide {
+    /* Faster transitions on mobile */
+    transition-duration: 350ms;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .vertical-feed-viewport {
+    scroll-behavior: auto;
+  }
+
+  .repository-slide {
+    transition-duration: 0.01ms !important;
+    transition-timing-function: linear !important;
+  }
+}
+
+/* High Performance Mode */
+.feed-performance-mode .repository-slide {
+  /* Disable transitions for performance */
+  transition: none;
+  /* Use immediate positioning */
+  transform: translate3d(0, var(--slide-offset, 0), 0);
+}
+
+/* Loading State Transitions */
+.repository-slide.loading {
+  opacity: 0.7;
+  transition:
+    opacity 200ms ease-in-out,
+    transform var(--feed-transition-duration) var(--feed-transition-easing);
+}
+
+.repository-slide.loaded {
+  opacity: 1;
+}
+
+/* Error State */
+.repository-slide.error {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
