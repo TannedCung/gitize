@@ -3,6 +3,7 @@ export * from './core';
 
 // Application-specific components
 export { RepositoryCard } from './RepositoryCard';
+export { RepositorySlide } from './RepositorySlide';
 export { LazyRepositoryCard } from './LazyRepositoryCard';
 export { SearchBar } from './SearchBar';
 export { CacheStatusIndicator } from './CacheStatusIndicator';
@@ -32,6 +33,7 @@ export {
 
 // Application-specific types
 export type { Repository } from './RepositoryCard';
+export type { RepositorySlideProps } from './RepositorySlide';
 export type { VerticalFeedProps } from './VerticalFeed';
 
 // Toast types

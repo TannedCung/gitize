@@ -9,6 +9,7 @@ import React, {
   useCallback,
 } from 'react';
 import { Repository } from './RepositoryCard';
+import { RepositorySlide } from './RepositorySlide';
 import { cn } from './utils';
 
 // Feed State Interface
@@ -177,38 +178,36 @@ function FeedProvider({
   );
 }
 
-// Repository Slide Component
-interface RepositorySlideProps {
-  repository: Repository;
-  isActive: boolean;
-  isVisible: boolean;
+// Slide Container Component - handles positioning and transitions
+interface SlideContainerProps {
+  children: React.ReactNode;
   slideIndex: number;
-  className?: string;
-  extensionMode?: 'popup' | 'newtab' | 'web';
+  currentIndex: number;
+  viewportHeight: number;
+  isTransitioning: boolean;
+  isVisible: boolean;
 }
 
-function RepositorySlide({
-  repository,
-  isActive,
-  isVisible,
+function SlideContainer({
+  children,
   slideIndex,
-  className,
-  extensionMode = 'web',
-}: RepositorySlideProps) {
-  const { state } = useFeedContext();
-
+  currentIndex,
+  viewportHeight,
+  isTransitioning,
+  isVisible,
+}: SlideContainerProps) {
   // Calculate transform offset based on current index
-  const offset = (slideIndex - state.currentIndex) * state.viewportHeight;
+  const offset = (slideIndex - currentIndex) * viewportHeight;
 
   // Determine if slide should be rendered (for performance)
-  const shouldRender = Math.abs(slideIndex - state.currentIndex) <= 2;
+  const shouldRender = Math.abs(slideIndex - currentIndex) <= 2;
 
   if (!shouldRender) {
     return (
       <div
         className="absolute top-0 left-0 w-full h-full"
         style={{
-          height: `${state.viewportHeight}px`,
+          height: `${viewportHeight}px`,
           transform: `translateY(${offset}px)`,
         }}
         data-slide-index={slideIndex}
@@ -223,106 +222,19 @@ function RepositorySlide({
       className={cn(
         'absolute top-0 left-0 w-full',
         'transition-transform duration-400 ease-out',
-        'flex items-center justify-center',
         'bg-neutral-white dark:bg-neutral-900',
         // Optimize rendering for non-visible slides
-        !isVisible && 'pointer-events-none',
-        className
+        !isVisible && 'pointer-events-none'
       )}
       style={{
-        height: `${state.viewportHeight}px`,
+        height: `${viewportHeight}px`,
         transform: `translateY(${offset}px)`,
-        willChange: state.isTransitioning ? 'transform' : 'auto',
+        willChange: isTransitioning ? 'transform' : 'auto',
       }}
       data-slide-index={slideIndex}
-      data-active={isActive}
-      data-visible={isVisible}
-      data-extension-mode={extensionMode}
-      role="article"
-      aria-label={`Repository ${repository.name} by ${repository.author}`}
-      aria-hidden={!isVisible}
+      data-active={slideIndex === currentIndex}
     >
-      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-neutral-white dark:bg-neutral-900 rounded-lg p-8">
-          {/* Repository Header */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-neutral-white mb-4">
-              {repository.name}
-            </h2>
-            <p className="text-lg text-neutral-600 dark:text-neutral-400">
-              by {repository.author}
-            </p>
-          </div>
-
-          {/* Repository Stats */}
-          <div className="flex justify-center space-x-8 mb-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-accent-amber-500">
-                {repository.stars.toLocaleString()}
-              </div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                Stars
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-neutral-700 dark:text-neutral-300">
-                {repository.forks.toLocaleString()}
-              </div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                Forks
-              </div>
-            </div>
-            {repository.language && (
-              <div className="text-center">
-                <div className="text-2xl font-bold text-accent-blue-500">
-                  {repository.language}
-                </div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Language
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Repository Description */}
-          {repository.description && (
-            <div className="text-center mb-8">
-              <p className="text-lg text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-2xl mx-auto">
-                {repository.description}
-              </p>
-            </div>
-          )}
-
-          {/* Repository Summary */}
-          {repository.summary && (
-            <div className="text-center mb-8">
-              <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-white mb-4">
-                AI Summary
-              </h3>
-              <p className="text-base text-neutral-700 dark:text-neutral-300 leading-relaxed max-w-3xl mx-auto">
-                {repository.summary}
-              </p>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex justify-center space-x-4">
-            <a
-              href={repository.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                'px-6 py-3 bg-accent-blue-600 hover:bg-accent-blue-700',
-                'text-white font-medium rounded-lg',
-                'transition-colors duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-accent-blue-500 focus:ring-offset-2'
-              )}
-            >
-              View on GitHub
-            </a>
-          </div>
-        </div>
-      </div>
+      {children}
     </div>
   );
 }
@@ -378,14 +290,22 @@ function FeedViewport({ className, extensionMode = 'web' }: FeedViewportProps) {
         const isVisible = Math.abs(index - state.currentIndex) <= 1;
 
         return (
-          <RepositorySlide
+          <SlideContainer
             key={`${repository.id}-${index}`}
-            repository={repository}
-            isActive={isActive}
-            isVisible={isVisible}
             slideIndex={index}
-            extensionMode={extensionMode}
-          />
+            currentIndex={state.currentIndex}
+            viewportHeight={state.viewportHeight}
+            isTransitioning={state.isTransitioning}
+            isVisible={isVisible}
+          >
+            <RepositorySlide
+              repository={repository}
+              isActive={isActive}
+              isVisible={isVisible}
+              slideIndex={index}
+              extensionMode={extensionMode}
+            />
+          </SlideContainer>
         );
       })}
 
