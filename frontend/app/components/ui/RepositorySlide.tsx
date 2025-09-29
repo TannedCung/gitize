@@ -4,14 +4,15 @@ import React, { useState } from 'react';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { CodeBracketIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { BaseComponentProps } from './types';
-import { Repository, SummaryState } from './RepositoryCard';
+import { SummaryState } from './RepositoryCard';
+import { VerticalFeedRepository } from '../../hooks/useVerticalFeedData';
 import { cn } from './utils';
 import { Button } from './Button';
 import { Alert } from './Alert';
 import { Spinner } from './Loading';
 
 export interface RepositorySlideProps extends BaseComponentProps {
-  repository: Repository;
+  repository: VerticalFeedRepository;
   isActive: boolean;
   isVisible: boolean;
   slideIndex: number;
@@ -434,7 +435,7 @@ export function RepositorySlide({
         >
           <Button
             onClick={handleVisitGitHub}
-            size={extensionMode === 'popup' ? 'sm' : 'default'}
+            size={extensionMode === 'popup' ? 'sm' : 'md'}
             className={cn(
               'bg-accent-blue-600 hover:bg-accent-blue-700 text-white font-medium',
               'transition-colors duration-200 touch-manipulation',
@@ -448,7 +449,7 @@ export function RepositorySlide({
 
           <Button
             variant="outline"
-            size={extensionMode === 'popup' ? 'sm' : 'default'}
+            size={extensionMode === 'popup' ? 'sm' : 'md'}
             onClick={handleSaveRepository}
             className={cn(
               'border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300',
@@ -464,7 +465,7 @@ export function RepositorySlide({
 
           <Button
             variant="ghost"
-            size={extensionMode === 'popup' ? 'sm' : 'default'}
+            size={extensionMode === 'popup' ? 'sm' : 'md'}
             onClick={handleShareRepository}
             className={cn(
               'text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200',

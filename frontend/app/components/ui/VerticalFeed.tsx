@@ -8,21 +8,34 @@ import React, {
   useState,
   useCallback,
 } from 'react';
-import { Repository } from './RepositoryCard';
+
 import { RepositorySlide } from './RepositorySlide';
 import { cn } from './utils';
+import {
+  useVerticalFeedData,
+  VerticalFeedRepository,
+  UseVerticalFeedDataOptions,
+} from '../../hooks/useVerticalFeedData';
+import {
+  useInfiniteScroll,
+  useInfiniteScrollUI,
+  useInfiniteScrollPerformance,
+} from '../../hooks/useInfiniteScroll';
 
 // Feed State Interface
 interface FeedState {
   currentIndex: number;
-  repositories: Repository[];
+  repositories: VerticalFeedRepository[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   hasMore: boolean;
   isTransitioning: boolean;
   viewportHeight: number;
   viewportWidth: number;
   scrollDirection: 'up' | 'down' | null;
   previousIndex: number;
+  error: string | null;
+  totalCount: number;
 }
 
 // Feed Actions Interface
@@ -30,9 +43,9 @@ interface FeedActions {
   navigateToIndex: (_index: number) => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
-  setRepositories: (_repositories: Repository[]) => void;
-  setLoading: (_loading: boolean) => void;
-  setHasMore: (_hasMore: boolean) => void;
+  loadMore: () => void;
+  refresh: () => void;
+  retry: () => void;
   updateViewportDimensions: () => void;
 }
 
@@ -40,6 +53,7 @@ interface FeedActions {
 interface FeedContextValue {
   state: FeedState;
   actions: FeedActions;
+  infiniteScrollUI: ReturnType<typeof useInfiniteScrollUI>;
 }
 
 const FeedContext = createContext<FeedContextValue | null>(null);
@@ -56,29 +70,64 @@ export function useFeedContext() {
 // Feed Provider Component
 interface FeedProviderProps {
   children: React.ReactNode;
-  initialRepositories?: Repository[];
+  dataOptions?: UseVerticalFeedDataOptions;
 }
 
-function FeedProvider({
-  children,
-  initialRepositories = [],
-}: FeedProviderProps) {
-  const [state, setState] = useState<FeedState>({
+function FeedProvider({ children, dataOptions = {} }: FeedProviderProps) {
+  // Use the data hook for repository management
+  const feedData = useVerticalFeedData(dataOptions);
+
+  // Infinite scroll management
+  const infiniteScroll = useInfiniteScroll({
+    threshold: dataOptions.preloadThreshold || 3,
+    enabled: dataOptions.enablePreloading !== false,
+    hasMore: feedData.hasMore,
+    isLoading: feedData.isLoadingMore,
+    onLoadMore: feedData.actions.loadMore,
+  });
+
+  // Infinite scroll UI management
+  const infiniteScrollUI = useInfiniteScrollUI();
+
+  // Performance tracking
+  const infiniteScrollPerf = useInfiniteScrollPerformance();
+
+  // Track loading performance
+  useEffect(() => {
+    if (feedData.isLoadingMore) {
+      infiniteScrollPerf.startLoadTimer();
+    } else {
+      const loadTime = infiniteScrollPerf.endLoadTimer();
+      if (loadTime > 0) {
+        console.debug(`Loaded batch in ${loadTime}ms`);
+      }
+    }
+  }, [feedData.isLoadingMore, infiniteScrollPerf]);
+
+  const [localState, setLocalState] = useState({
     currentIndex: 0,
-    repositories: initialRepositories,
-    isLoading: false,
-    hasMore: true,
     isTransitioning: false,
     viewportHeight: typeof window !== 'undefined' ? window.innerHeight : 800,
     viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 1200,
-    scrollDirection: null,
+    scrollDirection: null as 'up' | 'down' | null,
     previousIndex: 0,
   });
+
+  // Combine data state with local UI state
+  const state: FeedState = {
+    ...localState,
+    repositories: feedData.repositories,
+    isLoading: feedData.isLoading,
+    isLoadingMore: feedData.isLoadingMore,
+    hasMore: feedData.hasMore,
+    error: feedData.error,
+    totalCount: feedData.totalCount,
+  };
 
   // Update viewport dimensions with debouncing
   const updateViewportDimensions = useCallback(() => {
     if (typeof window !== 'undefined') {
-      setState(prev => ({
+      setLocalState(prev => ({
         ...prev,
         viewportHeight: window.innerHeight,
         viewportWidth: window.innerWidth,
@@ -105,72 +154,82 @@ function FeedProvider({
     };
   }, [updateViewportDimensions]);
 
-  const actions: FeedActions = {
-    navigateToIndex: useCallback(
-      (_index: number) => {
-        if (
-          _index < 0 ||
-          _index >= state.repositories.length ||
-          state.isTransitioning
-        ) {
-          return;
-        }
+  // Navigation functions
+  const navigateToIndex = useCallback(
+    (_index: number) => {
+      if (
+        _index < 0 ||
+        _index >= state.repositories.length ||
+        localState.isTransitioning
+      ) {
+        return;
+      }
 
-        const direction = _index > state.currentIndex ? 'down' : 'up';
+      const direction = _index > localState.currentIndex ? 'down' : 'up';
 
-        setState(prev => ({
+      setLocalState(prev => ({
+        ...prev,
+        isTransitioning: true,
+        scrollDirection: direction,
+        previousIndex: prev.currentIndex,
+      }));
+
+      // Use requestAnimationFrame for smooth transitions
+      requestAnimationFrame(() => {
+        setLocalState(prev => ({
           ...prev,
-          isTransitioning: true,
-          scrollDirection: direction,
-          previousIndex: prev.currentIndex,
+          currentIndex: _index,
         }));
 
-        // Use requestAnimationFrame for smooth transitions
-        requestAnimationFrame(() => {
-          setState(prev => ({
+        // Clear transition state after animation completes
+        setTimeout(() => {
+          setLocalState(prev => ({
             ...prev,
-            currentIndex: _index,
+            isTransitioning: false,
+            scrollDirection: null,
           }));
+        }, 400); // Match CSS transition duration
+      });
 
-          // Clear transition state after animation completes
-          setTimeout(() => {
-            setState(prev => ({
-              ...prev,
-              isTransitioning: false,
-              scrollDirection: null,
-            }));
-          }, 400); // Match CSS transition duration
-        });
-      },
-      [state.repositories.length, state.currentIndex, state.isTransitioning]
-    ),
+      // Trigger infinite loading when approaching end
+      infiniteScroll.triggerLoadMore(_index, state.repositories.length);
+    },
+    [
+      state.repositories.length,
+      localState.currentIndex,
+      localState.isTransitioning,
+      infiniteScroll,
+    ]
+  );
 
-    navigateNext: useCallback(() => {
-      // Will be implemented in navigation task
-    }, []),
+  const navigateNext = useCallback(() => {
+    const nextIndex = localState.currentIndex + 1;
+    if (nextIndex < state.repositories.length) {
+      navigateToIndex(nextIndex);
+    }
+  }, [localState.currentIndex, state.repositories.length, navigateToIndex]);
 
-    navigatePrevious: useCallback(() => {
-      // Will be implemented in navigation task
-    }, []),
+  const navigatePrevious = useCallback(() => {
+    const prevIndex = localState.currentIndex - 1;
+    if (prevIndex >= 0) {
+      navigateToIndex(prevIndex);
+    }
+  }, [localState.currentIndex, navigateToIndex]);
 
-    setRepositories: useCallback((_repositories: Repository[]) => {
-      setState(prev => ({ ...prev, repositories: _repositories }));
-    }, []),
-
-    setLoading: useCallback((_loading: boolean) => {
-      setState(prev => ({ ...prev, isLoading: _loading }));
-    }, []),
-
-    setHasMore: useCallback((_hasMore: boolean) => {
-      setState(prev => ({ ...prev, hasMore: _hasMore }));
-    }, []),
-
+  const actions: FeedActions = {
+    navigateToIndex,
+    navigateNext,
+    navigatePrevious,
+    loadMore: feedData.actions.loadMore,
+    refresh: feedData.actions.refresh,
+    retry: feedData.actions.retry,
     updateViewportDimensions,
   };
 
   const contextValue: FeedContextValue = {
     state,
     actions,
+    infiniteScrollUI,
   };
 
   return (
@@ -246,7 +305,7 @@ interface FeedViewportProps {
 }
 
 function FeedViewport({ className, extensionMode = 'web' }: FeedViewportProps) {
-  const { state } = useFeedContext();
+  const { state, actions, infiniteScrollUI } = useFeedContext();
   const viewportRef = useRef<HTMLDivElement>(null);
 
   // Optimize viewport for different modes
@@ -309,12 +368,12 @@ function FeedViewport({ className, extensionMode = 'web' }: FeedViewportProps) {
         );
       })}
 
-      {/* Loading indicator */}
+      {/* Loading indicator for initial load */}
       {state.isLoading && (
         <div
           className="absolute inset-0 flex items-center justify-center bg-neutral-white/80 dark:bg-neutral-900/80 z-50"
           role="status"
-          aria-label="Loading more repositories"
+          aria-label="Loading repositories"
         >
           <div className="text-center">
             <div
@@ -328,8 +387,92 @@ function FeedViewport({ className, extensionMode = 'web' }: FeedViewportProps) {
         </div>
       )}
 
+      {/* Loading more indicator with smooth transitions */}
+      {infiniteScrollUI.shouldShowLoadingIndicator(
+        state.isLoadingMore && !state.isLoading
+      ) && (
+        <div
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-neutral-white/90 dark:bg-neutral-900/90 px-4 py-2 rounded-full shadow-lg z-40 transition-opacity duration-300"
+          role="status"
+          aria-label="Loading more repositories"
+        >
+          <div className="flex items-center space-x-2">
+            <div
+              className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-blue-600"
+              aria-hidden="true"
+            />
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              Loading more...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Progress indicator - shows current position and loading status */}
+      {state.repositories.length > 0 && !state.isLoading && (
+        <div
+          className="absolute top-4 right-4 bg-neutral-white/90 dark:bg-neutral-900/90 px-3 py-1 rounded-full shadow-sm z-30 transition-opacity duration-300"
+          role="status"
+          aria-label={`Repository ${state.currentIndex + 1} of ${state.hasMore ? `${state.repositories.length}+` : state.repositories.length}`}
+        >
+          <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+            {state.currentIndex + 1} /{' '}
+            {state.hasMore
+              ? `${state.repositories.length}+`
+              : state.repositories.length}
+          </p>
+        </div>
+      )}
+
+      {/* End of content indicator */}
+      {!state.hasMore &&
+        !state.isLoading &&
+        !state.isLoadingMore &&
+        state.repositories.length > 0 &&
+        state.currentIndex === state.repositories.length - 1 && (
+          <div
+            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-neutral-white/90 dark:bg-neutral-900/90 px-4 py-2 rounded-full shadow-lg z-40"
+            role="status"
+            aria-label="End of repositories"
+          >
+            <div className="flex items-center space-x-2">
+              <div
+                className="w-2 h-2 bg-neutral-400 rounded-full"
+                aria-hidden="true"
+              />
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                You've reached the end
+              </p>
+            </div>
+          </div>
+        )}
+
+      {/* Error state */}
+      {state.error && !state.isLoading && (
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          role="alert"
+          aria-label="Error loading repositories"
+        >
+          <div className="text-center max-w-md mx-auto px-4">
+            <p className="text-xl text-red-600 dark:text-red-400 mb-4">
+              Failed to load repositories
+            </p>
+            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+              {state.error}
+            </p>
+            <button
+              onClick={() => actions.retry()}
+              className="px-6 py-2 bg-accent-blue-600 text-white rounded-lg hover:bg-accent-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Empty state */}
-      {!state.isLoading && state.repositories.length === 0 && (
+      {!state.isLoading && !state.error && state.repositories.length === 0 && (
         <div
           className="absolute inset-0 flex items-center justify-center"
           role="status"
@@ -339,9 +482,15 @@ function FeedViewport({ className, extensionMode = 'web' }: FeedViewportProps) {
             <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-4">
               No repositories found
             </p>
-            <p className="text-neutral-500 dark:text-neutral-500">
+            <p className="text-neutral-500 dark:text-neutral-500 mb-6">
               Try refreshing or check back later
             </p>
+            <button
+              onClick={() => actions.refresh()}
+              className="px-6 py-2 bg-accent-blue-600 text-white rounded-lg hover:bg-accent-blue-700 transition-colors"
+            >
+              Refresh
+            </button>
           </div>
         </div>
       )}
@@ -351,20 +500,18 @@ function FeedViewport({ className, extensionMode = 'web' }: FeedViewportProps) {
 
 // Main VerticalFeed Component
 export interface VerticalFeedProps {
-  repositories?: Repository[];
-  onLoadMore?: () => void;
   className?: string;
   extensionMode?: 'popup' | 'newtab' | 'web';
+  dataOptions?: UseVerticalFeedDataOptions;
 }
 
 export function VerticalFeed({
-  repositories = [],
-  onLoadMore: _onLoadMore,
   className,
   extensionMode = 'web',
+  dataOptions = {},
 }: VerticalFeedProps) {
   return (
-    <FeedProvider initialRepositories={repositories}>
+    <FeedProvider dataOptions={dataOptions}>
       <div
         className={cn(
           'w-full h-screen',
